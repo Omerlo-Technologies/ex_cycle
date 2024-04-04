@@ -8,14 +8,16 @@ defmodule ExCycle.Validations.HourOfDay do
 
   @type t :: %HourOfDay{hours: list(non_neg_integer())}
 
+  def new(hours), do: %HourOfDay{hours: Enum.sort(hours)}
+
   @doc """
 
   ## Examples
 
-      iex> valid?(~N[2024-04-04 20:00:00Z], %HourOfDay{hours: [20]})
+      iex> valid?(~N[2024-04-04 20:00:00], %HourOfDay{hours: [20]})
       true
 
-      iex> valid?(~N[2024-04-04 21:00:00Z], %HourOfDay{hours: [20]})
+      iex> valid?(~N[2024-04-04 21:00:00], %HourOfDay{hours: [20]})
       false
 
   """
@@ -28,20 +30,20 @@ defmodule ExCycle.Validations.HourOfDay do
 
   ## Examples
 
-      iex> next(~N[2024-04-04 20:00:00Z], %HourOfDay{hours: [21]})
-      ~N[2024-04-04 21:00:00Z]
+      iex> next(~N[2024-04-04 20:00:00], %HourOfDay{hours: [21]})
+      ~N[2024-04-04 21:00:00]
 
-      iex> next(~N[2024-04-04 20:00:00Z], %HourOfDay{hours: [10]})
-      ~N[2024-04-05 10:00:00Z]
+      iex> next(~N[2024-04-04 20:00:00], %HourOfDay{hours: [10]})
+      ~N[2024-04-05 10:00:00]
 
-      iex> next(~N[2024-04-04 20:00:00Z], %HourOfDay{hours: [22, 11]})
-      ~N[2024-04-04 22:00:00Z]
+      iex> next(~N[2024-04-04 20:00:00], %HourOfDay{hours: [10, 22]})
+      ~N[2024-04-04 22:00:00]
 
   """
   @spec next(NaiveDateTime.t(), t()) :: NaiveDateTime.t()
-  def next(naive_datetime, %HourOfDay{hours: _hours}) do
-    naive_datetime
-    # Find the nearest hour >= datetime.hour
-    # If it doesn't exist : get the lower hour
+  def next(naive_datetime, %HourOfDay{hours: hours}) do
+    next_hour = Enum.find(hours, &(&1 >= naive_datetime.hour)) || hd(hours)
+    diff = Integer.mod(next_hour - naive_datetime.hour, 24)
+    NaiveDateTime.add(naive_datetime, diff, :hour)
   end
 end
