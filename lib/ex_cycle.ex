@@ -3,16 +3,7 @@ defmodule ExCycle do
   Documentation for `ExCycle`.
   """
 
-  @doc """
-  Hello world.
+  @type datetime :: DateTime.t() | NaiveDateTime.t()
 
-  ## Examples
-
-      iex> ExCycle.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
+  @type validation :: ExCycle.Validations.HourOfDay.t()
 end
