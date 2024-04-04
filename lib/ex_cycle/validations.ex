@@ -1,5 +1,5 @@
 defmodule ExCycle.Validations do
-  @callback valid?(ExCycle.datetime(), ExCycle.validation()) :: boolean()
+  @callback valid?(NaiveDateTime.t(), ExCycle.validation()) :: boolean()
 
-  @callback next(ExCycle.datetime(), ExCycle.validation()) :: any()
+  @callback next(NaiveDateTime.t(), ExCycle.validation()) :: NaiveDateTime.t()
 end
