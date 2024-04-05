@@ -8,42 +8,27 @@ defmodule ExCycle.Validations.HourOfDay do
 
   @type t :: %HourOfDay{hours: list(non_neg_integer())}
 
-  def new(hours), do: %HourOfDay{hours: Enum.sort(hours)}
+  @spec new(list(non_neg_integer())) :: t()
+  def new(hours) do
+    invalid_hours = Enum.filter(hours, &(&1 < 0 || &1 > 23))
 
-  @doc """
+    unless Enum.empty?(invalid_hours) do
+      raise "Invalid hours: #{Enum.join(invalid_hours, ", ")}, must be between 0 and 23"
+    end
 
-  ## Examples
-
-      iex> valid?(~N[2024-04-04 20:00:00], %HourOfDay{hours: [20]})
-      true
-
-      iex> valid?(~N[2024-04-04 21:00:00], %HourOfDay{hours: [20]})
-      false
-
-  """
-  @spec valid?(NaiveDateTime.t(), t()) :: boolean()
-  def valid?(naive_datetime, %HourOfDay{hours: hours}) do
-    Enum.any?(hours, &(&1 == naive_datetime.hour))
+    %HourOfDay{hours: Enum.sort(hours)}
   end
 
-  @doc """
+  @spec valid?(ExCycle.State.t(), t()) :: boolean()
+  def valid?(datetime_state, %HourOfDay{hours: hours}) do
+    Enum.any?(hours, &(&1 == datetime_state.next.hour))
+  end
 
-  ## Examples
+  @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
+  def next(state, %HourOfDay{hours: hours}) do
+    next_hour = Enum.find(hours, &(&1 >= state.next.hour)) || hd(hours)
+    diff = rem(next_hour - state.next.hour, 24)
 
-      iex> next(~N[2024-04-04 20:00:00], %HourOfDay{hours: [21]})
-      ~N[2024-04-04 21:00:00]
-
-      iex> next(~N[2024-04-04 20:00:00], %HourOfDay{hours: [10]})
-      ~N[2024-04-05 10:00:00]
-
-      iex> next(~N[2024-04-04 20:00:00], %HourOfDay{hours: [10, 22]})
-      ~N[2024-04-04 22:00:00]
-
-  """
-  @spec next(NaiveDateTime.t(), t()) :: NaiveDateTime.t()
-  def next(naive_datetime, %HourOfDay{hours: hours}) do
-    next_hour = Enum.find(hours, &(&1 >= naive_datetime.hour)) || hd(hours)
-    diff = Integer.mod(next_hour - naive_datetime.hour, 24)
-    NaiveDateTime.add(naive_datetime, diff, :hour)
+    ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :hour))
   end
 end

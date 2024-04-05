@@ -1,5 +1,12 @@
 defmodule ExCycle.Validations do
-  @callback valid?(NaiveDateTime.t(), ExCycle.validation()) :: boolean()
+  alias ExCycle.Validations.{
+    HourOfDay,
+    Interval
+  }
 
-  @callback next(NaiveDateTime.t(), ExCycle.validation()) :: NaiveDateTime.t()
+  @type any_validation :: HourOfDay.t() | Interval.t()
+
+  @callback valid?(ExCycle.State.t(), any_validation()) :: boolean()
+
+  @callback next(ExCycle.State.t(), any_validation()) :: ExCycle.State.t()
 end
