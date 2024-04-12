@@ -74,7 +74,7 @@ defmodule ExCycle do
       ]
 
   """
-  @spec occurrences(t(), datetime()) :: Enumerable.t()
+  @spec occurrences(t(), datetime()) :: Enumerable.t(NaiveDateTime.t() | ExCycle.Span.t())
   def occurrences(%ExCycle{} = cycle, from) do
     initial_state = ExCycle.State.new(from)
 
@@ -83,20 +83,24 @@ defmodule ExCycle do
       Enum.map(rules, &Rule.next(%{&1 | state: initial_state}))
     end)
     |> Stream.unfold(fn cycle ->
-      {state, cycle} = get_next_occurrence(cycle)
-      {state.next, cycle}
+      {rule, cycle} = get_next_occurrence(cycle)
+      {rule, cycle}
+    end)
+    |> Stream.map(fn
+      %Rule{duration: nil, state: state} -> state.next
+      %Rule{duration: duration, state: state} -> ExCycle.Span.new(state.next, duration)
     end)
   end
 
   defp get_next_occurrence(%ExCycle{rules: [first_rule | rules]} = cycle) do
-    default = %{state: first_rule.state, index: 0}
+    default = %{rule: first_rule, index: 0}
 
     result =
       rules
       |> Enum.with_index(1)
       |> Enum.reduce(default, fn {rule, index}, result ->
-        if rule.state && NaiveDateTime.compare(result.state.next, rule.state.next) == :gt do
-          %{index: index, state: rule.state}
+        if rule.state && NaiveDateTime.compare(result.rule.state.next, rule.state.next) == :gt do
+          %{index: index, rule: rule}
         else
           result
         end
@@ -104,6 +108,6 @@ defmodule ExCycle do
 
     updated_rules = List.update_at([first_rule | rules], result.index, &Rule.next/1)
 
-    {result.state, %{cycle | rules: updated_rules}}
+    {result.rule, %{cycle | rules: updated_rules}}
   end
 end

@@ -21,4 +21,22 @@ defmodule ExCycleTest do
              ~N[2024-03-04 10:00:00]
            ]
   end
+
+  describe "duration" do
+    test "every day with 1h of duration" do
+      spans =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, interval: 2, hours: [10], duration: %Duration{hour: 1})
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(4)
+
+      assert spans ==
+               [
+                 %ExCycle.Span{from: ~N[2024-01-01 10:00:00], to: ~N[2024-01-01 11:00:00]},
+                 %ExCycle.Span{from: ~N[2024-01-03 10:00:00], to: ~N[2024-01-03 11:00:00]},
+                 %ExCycle.Span{from: ~N[2024-01-05 10:00:00], to: ~N[2024-01-05 11:00:00]},
+                 %ExCycle.Span{from: ~N[2024-01-07 10:00:00], to: ~N[2024-01-07 11:00:00]}
+               ]
+    end
+  end
 end
