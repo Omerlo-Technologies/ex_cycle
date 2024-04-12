@@ -1,4 +1,5 @@
 defmodule ExCycle.Validations.HourOfDay do
+  @moduledoc false
   @behaviour ExCycle.Validations
 
   alias __MODULE__
@@ -19,16 +20,22 @@ defmodule ExCycle.Validations.HourOfDay do
     %HourOfDay{hours: Enum.sort(hours)}
   end
 
+  @impl ExCycle.Validations
   @spec valid?(ExCycle.State.t(), t()) :: boolean()
   def valid?(datetime_state, %HourOfDay{hours: hours}) do
     Enum.any?(hours, &(&1 == datetime_state.next.hour))
   end
 
+  @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
-  def next(state, %HourOfDay{hours: hours}) do
-    next_hour = Enum.find(hours, &(&1 >= state.next.hour)) || hd(hours)
-    diff = rem(next_hour - state.next.hour, 24)
+  def next(state, %HourOfDay{hours: hours} = validation) do
+    next_hour = Enum.find(hours, &(&1 > state.next.hour)) || hd(hours)
 
-    ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :hour))
+    if state.next.hour == next_hour do
+      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, 1, :day))
+    else
+      diff = rem(next_hour - state.next.hour + 24, 24)
+      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, diff, :hour))
+    end
   end
 end

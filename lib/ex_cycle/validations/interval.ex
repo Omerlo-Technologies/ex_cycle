@@ -1,92 +1,118 @@
 defmodule ExCycle.Validations.Interval do
+  @moduledoc false
   @behaviour ExCycle.Validations
 
   alias __MODULE__
 
-  @type t :: %Interval{type: interval_type, value: non_neg_integer()}
-  @type interval_type :: :secondly | :minutely | :hourly | :daily | :weekly | :monthly | :yearly
+  @type t :: %Interval{frequency: frequency, value: non_neg_integer()}
+  @type frequency :: :secondly | :minutely | :hourly | :daily | :weekly | :monthly | :yearly
 
-  defstruct [:type, value: 1]
+  defstruct [:frequency, value: 1]
 
   @type_to_unit %{daily: :day, hourly: :hour, minutely: :minute, secondly: :second}
 
-  @spec new(interval_type(), non_neg_integer()) :: t()
-  def new(interval_type, value) do
-    unless interval_type in [:secondly, :minutely, :hourly, :daily, :weekly, :monthly, :yearly] do
-      raise "invalid type: #{interval_type}, must be one of secondly, minutely, hourly, daily, weekly, monthly or yearly"
+  @frequencies [:secondly, :minutely, :hourly, :daily, :weekly, :monthly, :yearly]
+
+  @spec new(frequency(), non_neg_integer()) :: t()
+  def new(frequency, value \\ 1) do
+    unless frequency in @frequencies do
+      raise "invalid frequency: #{frequency}, must be one of secondly, minutely, hourly, daily, weekly, monthly or yearly"
     end
 
     unless value > 0 do
       raise "invalid value, must be higher or equal to 1"
     end
 
-    %Interval{type: interval_type, value: value}
+    %Interval{frequency: frequency, value: value}
   end
 
+  @impl ExCycle.Validations
   @spec valid?(ExCycle.State.t(), t()) :: boolean()
   def valid?(_state, %Interval{value: 1}), do: true
 
-  def valid?(state, %{type: type, value: value})
-      when type in [:daily, :hourly, :minutely, :secondly] do
+  def valid?(state, %{frequency: type, value: value})
+      when type in [:hourly, :minutely, :secondly] do
     unit = Map.get(@type_to_unit, type)
-    diff = NaiveDateTime.diff(state.origin, state.next, unit)
+    diff = NaiveDateTime.diff(state.next, state.origin, unit)
     rem(diff, value) == 0
   end
 
-  def valid?(state, %{type: :weekly, value: value}) do
+  def valid?(state, %{frequency: :daily, value: value}) do
+    diff = Date.diff(state.next, state.origin)
+    rem(diff, value) == 0
+  end
+
+  def valid?(state, %{frequency: :weekly, value: value}) do
     origin_week = Date.beginning_of_week(state.origin)
     next_week = Date.beginning_of_week(state.next)
-    diff = Date.diff(origin_week, next_week)
+    diff = Date.diff(next_week, origin_week)
     rem(diff, value * 7) == 0
   end
 
-  def valid?(state, %{type: :monthly, value: value}) do
+  def valid?(state, %{frequency: :monthly, value: value}) do
     origin_months = state.origin.year * 12 + state.origin.month
     next_months = state.next.year * 12 + state.next.month
     diff = origin_months - next_months
     rem(diff, value) == 0
   end
 
-  def valid?(state, %{type: :yearly, value: value}) do
+  def valid?(state, %{frequency: :yearly, value: value}) do
     rem(state.origin.year - state.next.year, value) == 0
   end
 
+  @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
-  def next(state, %Interval{type: type, value: value})
-      when type in [:daily, :hourly, :minutely, :secondly] do
+  def next(state, %Interval{frequency: type, value: value} = validation)
+      when type in [:hourly, :minutely, :secondly] do
     unit = Map.get(@type_to_unit, type)
-    ExCycle.State.update_next(state, &NaiveDateTime.add(&1, value, unit))
-  end
 
-  def next(state, %Interval{type: :weekly, value: value}) do
-    ExCycle.State.update_next(state, &NaiveDateTime.add(&1, 7 * value, :day))
-  end
-
-  def next(state, %Interval{type: :monthly, value: value}) do
-    ExCycle.State.update_next(state, fn next ->
-      months = value + next.month - 1
-      shift_years = next.year + div(months, 12)
-      shift_months = rem(months, 12) + 1
-
-      %{next | year: shift_years, month: shift_months}
-      |> ensure_valid_date()
-    end)
-  end
-
-  def next(state, %Interval{type: :yearly, value: value}) do
-    ExCycle.State.update_next(state, fn next ->
-      %{next | year: next.year + value}
-      |> ensure_valid_date()
-    end)
-  end
-
-  defp ensure_valid_date(datetime) do
-    if Calendar.ISO.valid_date?(datetime.year, datetime.month, datetime.day) do
-      datetime
+    if state.origin == state.next do
+      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value, unit))
     else
-      datetime
-      |> Date.end_of_month()
-      |> NaiveDateTime.new!(NaiveDateTime.to_time(datetime))
+      diff = Map.get(state.next, unit) - Map.get(state.origin, unit)
+      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value - diff, unit))
     end
+  end
+
+  def next(state, %Interval{frequency: :daily, value: value} = validation) do
+    if state.origin == state.next do
+      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value, :day))
+    else
+      ExCycle.State.update_next(state, validation, fn next ->
+        diff_days = Date.diff(state.next, state.origin)
+        rem_days = rem(diff_days, value)
+
+        NaiveDateTime.add(next, value - rem_days, :day)
+      end)
+    end
+  end
+
+  def next(state, %Interval{frequency: :weekly, value: value} = validation) do
+    if state.origin == state.next do
+      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value * 7, :day))
+    else
+      origin_week = Date.beginning_of_week(state.origin)
+      next_week = Date.beginning_of_week(state.next)
+      diff = rem(Date.diff(next_week, origin_week), value * 7)
+      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, diff, :day))
+    end
+  end
+
+  def next(state, %Interval{frequency: :monthly, value: value} = validation) do
+    months = value + state.origin.month - 1
+    shift_years = state.origin.year + div(months, 12)
+    shift_months = rem(months, 12) + 1
+
+    ExCycle.State.update_next(state, validation, fn next ->
+      %{next | year: shift_years, month: shift_months}
+    end)
+  end
+
+  def next(state, %Interval{frequency: :yearly, value: value} = validation) do
+    ExCycle.State.update_next(state, validation, fn next ->
+      diff_years = next.year - state.origin.year
+      rem_years = rem(diff_years, value)
+      %{next | year: state.origin.year + diff_years + value - rem_years}
+    end)
   end
 end
