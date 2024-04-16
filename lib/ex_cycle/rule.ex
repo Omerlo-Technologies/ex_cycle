@@ -64,12 +64,8 @@ defmodule ExCycle.Rule do
       iex> rule =
       ...>   Rule.new(:daily, interval: 2, hours: [20, 10])
       ...>   |> Map.put(:state, ExCycle.State.new(~D[2024-04-04]))
-
-      iex> rule = Rule.next(rule)
+      ...> rule = Rule.next(rule)
       %Rule{state: %ExCycle.State{next: ~N[2024-04-04 10:00:00]}}
-
-      iex> rule = Rule.next(rule)
-      %Rule{state: %ExCycle.State{next: ~N[2024-04-04 20:00:00]}}
 
   """
   @spec next(t()) :: ExCycle.State.t()

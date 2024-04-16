@@ -1,5 +1,8 @@
 defmodule ExCycle.Span do
-  @moduledoc false
+  @moduledoc """
+  `Span` is used to generate datetime with a Rule that contain a `Duration`.
+  When a `duration` is specified, we must have a `from` and a `to` for every generated datetimes.
+  """
 
   alias __MODULE__
 

@@ -1,5 +1,13 @@
 defmodule ExCycle.Validations do
-  @moduledoc false
+  @moduledoc """
+  Every Rules applies a list of validation to defined the next datetime.
+
+  Thoses validations could be:
+
+  - `interval` (required)
+  - `hour_of_day` (optional)
+
+  """
 
   alias ExCycle.Validations.{
     DateValidation,

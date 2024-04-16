@@ -1,5 +1,15 @@
 defmodule ExCycle.Validations.HourOfDay do
-  @moduledoc false
+  @moduledoc """
+  HourOfDay defines a list of specific hours to use in the generated datetime.
+
+  ## Examples
+
+      iex> %HourOfDay{hours: [10, 20]}
+
+  will generate datetime every 10:00 and 20:00 of the interval specified (e.g. `daily`).
+
+  """
+
   @behaviour ExCycle.Validations
 
   alias __MODULE__

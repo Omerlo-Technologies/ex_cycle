@@ -1,5 +1,9 @@
 defmodule ExCycle.Validations.Lock do
-  @moduledoc false
+  @moduledoc """
+  The `Lock` validation is used to lock a specific item like `:day`.
+  So the generated datetime MUST have the valid datetime that match this restriction.
+  """
+
   @behaviour ExCycle.Validations
 
   alias __MODULE__

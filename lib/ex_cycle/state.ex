@@ -1,5 +1,7 @@
 defmodule ExCycle.State do
-  @moduledoc false
+  @moduledoc """
+  The `ExCycle.State` represents the state of the next generated datetime.
+  """
 
   alias __MODULE__
 

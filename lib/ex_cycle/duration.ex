@@ -1,8 +1,9 @@
 if Version.compare(System.version(), "1.17.0") == :lt do
-  # This is mainly to create a struct introduces in Elixir v1.17.0
-  # https://github.com/elixir-lang/elixir/blob/main/lib/elixir/lib/calendar/duration.ex
   defmodule Duration do
-    @moduledoc false
+    @moduledoc """
+    This is mainly to create a struct introduces in Elixir v1.17.0
+    https://github.com/elixir-lang/elixir/blob/main/lib/elixir/lib/calendar/duration.ex
+    """
 
     @derive {Inspect,
              optional: [:year, :month, :week, :day, :hour, :minute, :second, :microsecond]}

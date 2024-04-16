@@ -1,5 +1,17 @@
 defmodule ExCycle.Validations.Interval do
-  @moduledoc false
+  @moduledoc """
+  Interval is the base of RRule. Every Rule could be:
+
+  - `secondly`
+  - `minutely`
+  - `hourly`
+  - `daily`
+  - `weekly`
+  - `montly`
+  - `yearly`
+
+  """
+
   @behaviour ExCycle.Validations
 
   alias __MODULE__

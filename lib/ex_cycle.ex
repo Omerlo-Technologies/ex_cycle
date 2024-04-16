@@ -51,7 +51,7 @@ defmodule ExCycle do
   end
 
   @doc """
-  Creates a stream of occurrences using the DateTime as reference.
+  Creates a stream of occurrences using the `from` as reference.
 
   ## Examples
 
