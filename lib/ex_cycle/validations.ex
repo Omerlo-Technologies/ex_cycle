@@ -1,4 +1,6 @@
 defmodule ExCycle.Validations do
+  @moduledoc false
+
   alias ExCycle.Validations.{
     DateValidation,
     HourOfDay,
