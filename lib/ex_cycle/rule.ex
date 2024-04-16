@@ -10,10 +10,11 @@ defmodule ExCycle.Rule do
           validations: [Validations.any_validation(), ...],
           state: ExCycle.State.t() | nil,
           count: non_neg_integer() | nil,
-          until: Date.t() | nil
+          until: Date.t() | nil,
+          duration: Duration.t() | nil
         }
 
-  defstruct validations: [], count: nil, until: nil, state: nil
+  defstruct validations: [], count: nil, until: nil, state: nil, duration: nil
 
   @doc """
   Defines a new Rule struct.
@@ -39,6 +40,7 @@ defmodule ExCycle.Rule do
   def new(frequency, opts \\ []) do
     opts = Keyword.new(opts)
 
+    {duration, opts} = Keyword.pop(opts, :duration, nil)
     {count, opts} = Keyword.pop(opts, :count, nil)
     {until, opts} = Keyword.pop(opts, :until, nil)
     {interval, opts} = Keyword.pop(opts, :interval, 1)
@@ -48,7 +50,8 @@ defmodule ExCycle.Rule do
     %Rule{
       validations: Validations.build(frequency, opts),
       count: count,
-      until: until
+      until: until,
+      duration: duration
     }
   end
 
