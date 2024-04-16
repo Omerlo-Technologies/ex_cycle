@@ -44,3 +44,8 @@ You can specified a duration using the option `:duration` that use the structure
 in elixir `1.17`.
 
 > For every Elixir's versions before `1.17` we clone this structure to obtain the same behaviour.
+
+## Credits
+
+`ExCycle` is inspired by [Cocktail](https://github.com/peek-travel/cocktail). We decide to make this library
+to fix problems related to Timezone and DST.
