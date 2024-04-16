@@ -56,12 +56,11 @@ defmodule ExCycle.MixProject do
 
   defp package do
     [
-      files: ~w[lib .formatters.exs mix.exs README.md LICENSE.md],
+      files: ~w[lib mix.exs README.md LICENSE.md],
       maintainers: ["Alexandre Lepretre"],
-      licences: ["MIT"],
+      licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/Omerlo-Technologies/ex_cycle",
-        "Readme" => "https://github.com/Omerlo-Technologies/ex_cycle/blob/#{@version}/README.md"
+        "GitHub" => "https://github.com/Omerlo-Technologies/ex_cycle"
       },
       source_url: "https://github.com/Omerlo-Technologies/ex_cycle"
     ]
