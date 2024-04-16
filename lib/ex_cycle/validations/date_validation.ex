@@ -1,5 +1,8 @@
 defmodule ExCycle.Validations.DateValidation do
-  @moduledoc false
+  @moduledoc """
+  `DateValidation` ensure the generated date is a valid dates.
+  This is usefull for leap year and not leap year (e.g. 2023-02-29 doesn't exist wheras 2024-02-29 do).
+  """
   @behaviour ExCycle.Validations
 
   alias __MODULE__
