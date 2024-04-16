@@ -1,4 +1,6 @@
 defmodule ExCycle.Span do
+  @moduledoc false
+
   alias __MODULE__
 
   defstruct [:from, :to]
