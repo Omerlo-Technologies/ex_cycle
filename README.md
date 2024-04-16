@@ -40,12 +40,11 @@ The first element is the frequency that could be one of `secondly`, `minutely`, 
 `daily`, `monthly` or `yearly`. Then the 2nd parameter is a list of validations options
 (like every hours at X).
 
-You can specified a duration using the option `:duration` that use the structure `Duration` introduce
+You can specified a duration using the option `:duration`. The value uses the `Duration` structured, introduced
 in elixir `1.17`.
 
-> For every Elixir's versions before `1.17` we clone this structure to obtain the same behaviour.
+> For every Elixir's versions before `1.17`, you must clone this structure to obtain the same behaviour.
 
 ## Credits
 
-`ExCycle` is inspired by [Cocktail](https://github.com/peek-travel/cocktail). We decide to make this library
-to fix problems related to Timezone and DST.
+`ExCycle` is inspired by [Cocktail](https://github.com/peek-travel/cocktail). ExCycle's goal is to improve the handling of Timezones and DST. 
