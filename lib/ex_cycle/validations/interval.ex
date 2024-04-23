@@ -74,23 +74,23 @@ defmodule ExCycle.Validations.Interval do
 
   @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
-  def next(state, %Interval{frequency: type, value: value} = validation)
+  def next(state, %Interval{frequency: type, value: value})
       when type in [:hourly, :minutely, :secondly] do
     unit = Map.get(@type_to_unit, type)
 
     if state.origin == state.next do
-      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value, unit))
+      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, value, unit))
     else
       diff = Map.get(state.next, unit) - Map.get(state.origin, unit)
-      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value - diff, unit))
+      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, value - diff, unit))
     end
   end
 
-  def next(state, %Interval{frequency: :daily, value: value} = validation) do
+  def next(state, %Interval{frequency: :daily, value: value}) do
     if state.origin == state.next do
-      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value, :day))
+      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, value, :day))
     else
-      ExCycle.State.update_next(state, validation, fn next ->
+      ExCycle.State.update_next(state, fn next ->
         diff_days = Date.diff(state.next, state.origin)
         rem_days = rem(diff_days, value)
 
@@ -99,29 +99,29 @@ defmodule ExCycle.Validations.Interval do
     end
   end
 
-  def next(state, %Interval{frequency: :weekly, value: value} = validation) do
+  def next(state, %Interval{frequency: :weekly, value: value}) do
     if state.origin == state.next do
-      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, value * 7, :day))
+      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, value * 7, :day))
     else
       origin_week = Date.beginning_of_week(state.origin)
       next_week = Date.beginning_of_week(state.next)
       diff = rem(Date.diff(next_week, origin_week), value * 7)
-      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, diff, :day))
+      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :day))
     end
   end
 
-  def next(state, %Interval{frequency: :monthly, value: value} = validation) do
+  def next(state, %Interval{frequency: :monthly, value: value}) do
     months = value + state.origin.month - 1
     shift_years = state.origin.year + div(months, 12)
     shift_months = rem(months, 12) + 1
 
-    ExCycle.State.update_next(state, validation, fn next ->
+    ExCycle.State.update_next(state, fn next ->
       %{next | year: shift_years, month: shift_months}
     end)
   end
 
-  def next(state, %Interval{frequency: :yearly, value: value} = validation) do
-    ExCycle.State.update_next(state, validation, fn next ->
+  def next(state, %Interval{frequency: :yearly, value: value}) do
+    ExCycle.State.update_next(state, fn next ->
       diff_years = next.year - state.origin.year
       rem_years = rem(diff_years, value)
       %{next | year: state.origin.year + diff_years + value - rem_years}

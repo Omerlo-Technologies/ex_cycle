@@ -9,15 +9,25 @@ defmodule ExCycle.Rule do
   @type t :: %Rule{
           validations: [Validations.any_validation(), ...],
           state: ExCycle.State.t() | nil,
+          timezone: String.t() | nil,
           count: non_neg_integer() | nil,
           until: Date.t() | nil,
           duration: Duration.t() | nil
         }
 
-  defstruct validations: [], count: nil, until: nil, state: nil, duration: nil
+  defstruct validations: [], count: nil, until: nil, state: nil, duration: nil, timezone: nil
 
   @doc """
   Defines a new Rule struct.
+
+  ## Options
+
+  - `duration`: A simple `Duration` struct.
+  - `count` (not implemented yet).
+  - `until` (not implemented yet).
+  - `interval`: base interval of the recurren rule (daily, weekly ....).
+  - `start_at`: Reference date to used to every recurrent event generated.
+  - `timezone`: TimeZone to use when generating recurrent dates.
 
   ## Examples
 
@@ -30,9 +40,25 @@ defmodule ExCycle.Rule do
           %ExCycle.Validations.Lock{unit: :minute},
           %ExCycle.Validations.Lock{unit: :second}
         ],
+        timezone: nil,
         count: nil,
         until: nil,
-        state: nil
+        state: %ExCycle.State{}
+      }
+
+      iex> new(:daily, hours: [20, 10], starts_at: ~N[2024-04-22 17:00:00], timezone: "America/Montreal")
+      %ExCycle.Rule{
+        validations: [
+          %ExCycle.Validations.HourOfDay{hours: [10, 20]},
+          %ExCycle.Validations.Interval{frequency: :daily, value: 1},
+          %ExCycle.Validations.DateValidation{},
+          %ExCycle.Validations.Lock{unit: :minute},
+          %ExCycle.Validations.Lock{unit: :second}
+        ],
+        timezone: "America/Montreal",
+        count: nil,
+        until: nil,
+        state: %ExCycle.State{starts_at: ~N[2024-04-22 17:00:00]}
       }
 
   """
@@ -44,10 +70,14 @@ defmodule ExCycle.Rule do
     {count, opts} = Keyword.pop(opts, :count, nil)
     {until, opts} = Keyword.pop(opts, :until, nil)
     {interval, opts} = Keyword.pop(opts, :interval, 1)
+    {start_at, opts} = Keyword.pop_lazy(opts, :starts_at, &NaiveDateTime.utc_now/0)
+    {timezone, opts} = Keyword.pop(opts, :timezone)
 
     opts = Keyword.put(opts, frequency, interval)
 
     %Rule{
+      state: ExCycle.State.new(start_at),
+      timezone: timezone,
       validations: Validations.build(frequency, opts),
       count: count,
       until: until,
@@ -68,16 +98,30 @@ defmodule ExCycle.Rule do
       %Rule{state: %ExCycle.State{next: ~N[2024-04-04 10:00:00]}}
 
   """
-  @spec next(t()) :: ExCycle.State.t()
+  @spec next(t()) :: t()
   def next(%Rule{} = rule) do
     %mod{} = first_validation = hd(rule.validations)
 
-    Map.update!(rule, :state, fn state ->
+    rule
+    |> Map.update!(:state, fn state ->
       state
-      |> ExCycle.State.reset()
       |> mod.next(first_validation)
       |> do_next(rule.validations)
     end)
+    |> generate_result()
+  end
+
+  defp generate_result(rule) do
+    with {:ok, state} <- ExCycle.State.set_result(rule.state),
+         {:ok, state} <- ExCycle.State.apply_duration(state, rule.duration),
+         {:ok, state} <- ExCycle.State.apply_timezone(state, rule.timezone) do
+      Map.put(rule, :state, state)
+    else
+      {:error, state} ->
+        rule
+        |> Map.put(:state, %{state | origin: state.next})
+        |> next()
+    end
   end
 
   defp do_next(state, validations) do

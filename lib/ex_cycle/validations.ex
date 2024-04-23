@@ -16,22 +16,26 @@ defmodule ExCycle.Validations do
     Lock
   }
 
-  @type any_validation :: HourOfDay.t() | Interval.t() | Lock.t() | DateValidation.t()
+  @type any_validation ::
+          HourOfDay.t()
+          | Interval.t()
+          | Lock.t()
+          | DateValidation.t()
 
   @callback valid?(ExCycle.State.t(), any_validation()) :: boolean()
 
   @callback next(ExCycle.State.t(), any_validation()) :: ExCycle.State.t()
 
-  @validation_order [
+  @validations_order [
     :hour_of_day,
     :interval
   ]
 
   @doc false
-  @spec sort(any_validation) :: [any_validation(), ...]
-  def sort(validations) do
-    for key <- @validation_order, validation = validations[key], !is_nil(validation) do
-      validation
+  @spec sort(map()) :: [any_validation(), ...]
+  def sort(map) do
+    for key <- @validations_order, item = map[key], !is_nil(item) do
+      item
     end
   end
 
