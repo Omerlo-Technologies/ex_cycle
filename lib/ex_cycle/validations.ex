@@ -13,11 +13,13 @@ defmodule ExCycle.Validations do
     DateValidation,
     HourOfDay,
     Interval,
-    Lock
+    Lock,
+    MinuteOfHour
   }
 
   @type any_validation ::
-          HourOfDay.t()
+          MinuteOfHour.t()
+          | HourOfDay.t()
           | Interval.t()
           | Lock.t()
           | DateValidation.t()
@@ -27,6 +29,7 @@ defmodule ExCycle.Validations do
   @callback next(ExCycle.State.t(), any_validation()) :: ExCycle.State.t()
 
   @validations_order [
+    :minute_of_hour,
     :hour_of_day,
     :interval
   ]
@@ -43,82 +46,21 @@ defmodule ExCycle.Validations do
   @spec build(Interval.frequency(), keyword()) :: [any_validation(), ...]
   def build(frequency, opts) do
     validations = Enum.reduce(opts, %{}, &build_validation/2)
-    locks = locks_for(frequency, validations)
+    locks = locks_for(frequency)
     sort(validations) ++ [DateValidation.new()] ++ locks
   end
 
-  defp locks_for(:yearly, validations) do
-    add_lock(:second, validations)
-    |> add_lock(:minute, validations)
-    |> add_lock(:hour, validations)
-    |> add_lock(:day, validations)
-    |> add_lock(:month, validations)
-  end
-
-  defp locks_for(:monthly, validations) do
-    add_lock(:second, validations)
-    |> add_lock(:minute, validations)
-    |> add_lock(:hour, validations)
-    |> add_lock(:day, validations)
-  end
-
-  defp locks_for(:weekly, validations) do
-    add_lock(:second, validations)
-    |> add_lock(:minute, validations)
-    |> add_lock(:hour, validations)
-    |> add_lock(:week_day, validations)
-  end
-
-  defp locks_for(:daily, validations) do
-    add_lock(:second, validations)
-    |> add_lock(:minute, validations)
-    |> add_lock(:hour, validations)
-  end
-
-  defp locks_for(:hourly, validations) do
-    add_lock(:second, validations)
-    |> add_lock(:minute, validations)
-  end
-
-  defp locks_for(:minutely, validations) do
-    add_lock(:second, validations)
-  end
-
-  defp locks_for(:secondly, _validations_names) do
-    []
-  end
-
-  defp add_lock(locks \\ [], type, validations_names)
-
-  defp add_lock(locks, :second, _validations) do
-    [Lock.new(:second) | locks]
-  end
-
-  defp add_lock(locks, :minute, _validations) do
-    [Lock.new(:minute) | locks]
-  end
-
-  defp add_lock(locks, :hour, validations) do
-    if Map.has_key?(validations, :hour_of_day) do
-      locks
-    else
-      [Lock.new(:hour) | locks]
-    end
-  end
-
-  defp add_lock(locks, :day, _validations) do
-    [Lock.new(:day) | locks]
-  end
-
-  defp add_lock(locks, :week_day, _validations) do
-    [Lock.new(:week_day) | locks]
-  end
-
-  defp add_lock(locks, :month, _validations) do
-    [Lock.new(:month) | locks]
-  end
+  # NOTE maybe `locks_for/1` must be handle directly in the interval validations
+  defp locks_for(:yearly), do: [Lock.new(:month), Lock.new(:day)]
+  defp locks_for(:monthly), do: [Lock.new(:day)]
+  defp locks_for(:weekly), do: [Lock.new(:week_day)]
+  defp locks_for(_interval), do: []
 
   @doc false
+  defp build_validation({:minutes, minutes}, validations) do
+    Map.put(validations, :minute_of_hour, MinuteOfHour.new(minutes))
+  end
+
   defp build_validation({:hours, hours}, validations) do
     Map.put(validations, :hour_of_day, HourOfDay.new(hours))
   end

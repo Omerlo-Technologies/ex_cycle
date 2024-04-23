@@ -10,9 +10,7 @@ defmodule ExCycle.RuleTest do
       expected_validations = [
         %ExCycle.Validations.HourOfDay{hours: [10, 20]},
         %ExCycle.Validations.Interval{frequency: :daily, value: 2},
-        %ExCycle.Validations.DateValidation{},
-        %ExCycle.Validations.Lock{unit: :minute},
-        %ExCycle.Validations.Lock{unit: :second}
+        %ExCycle.Validations.DateValidation{}
       ]
 
       assert rule.validations == expected_validations

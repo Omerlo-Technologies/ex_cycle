@@ -3,25 +3,47 @@ defmodule ExCycleTest do
 
   import ExCycle.Support.DateTimeSigil
 
-  test "with multiples rules" do
-    datetimes =
-      ExCycle.new()
-      |> ExCycle.add_rule(:daily, interval: 2, hours: [20, 10], starts_at: ~D[2024-02-29])
-      |> ExCycle.add_rule(:daily, interval: 1, hours: [15], starts_at: ~D[2024-01-01])
-      |> ExCycle.occurrences(~D[2024-02-29])
-      |> Enum.take(9)
+  describe "rules" do
+    test "at hour" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, hours: [10], starts_at: ~D[2024-01-01])
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(2)
 
-    assert datetimes == [
-             ~N[2024-02-29 10:00:00],
-             ~N[2024-02-29 15:00:00],
-             ~N[2024-02-29 20:00:00],
-             ~N[2024-03-01 15:00:00],
-             ~N[2024-03-02 10:00:00],
-             ~N[2024-03-02 15:00:00],
-             ~N[2024-03-02 20:00:00],
-             ~N[2024-03-03 15:00:00],
-             ~N[2024-03-04 10:00:00]
-           ]
+      assert datetimes == [~N[2024-01-01 10:00:00], ~N[2024-01-02 10:00:00]]
+    end
+
+    test "at minute" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:weekly, minutes: [10], starts_at: ~D[2024-01-01])
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(2)
+
+      assert datetimes == [~N[2024-01-01 00:10:00], ~N[2024-01-01 01:10:00]]
+    end
+
+    test "with multiples rules" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, interval: 2, hours: [20, 10], starts_at: ~D[2024-02-29])
+        |> ExCycle.add_rule(:daily, interval: 1, hours: [15], starts_at: ~D[2024-01-01])
+        |> ExCycle.occurrences(~D[2024-02-29])
+        |> Enum.take(9)
+
+      assert datetimes == [
+               ~N[2024-02-29 10:00:00],
+               ~N[2024-02-29 15:00:00],
+               ~N[2024-02-29 20:00:00],
+               ~N[2024-03-01 15:00:00],
+               ~N[2024-03-02 10:00:00],
+               ~N[2024-03-02 15:00:00],
+               ~N[2024-03-02 20:00:00],
+               ~N[2024-03-03 15:00:00],
+               ~N[2024-03-04 10:00:00]
+             ]
+    end
   end
 
   describe "duration" do
