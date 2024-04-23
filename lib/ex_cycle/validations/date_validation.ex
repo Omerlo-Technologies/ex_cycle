@@ -24,8 +24,8 @@ defmodule ExCycle.Validations.DateValidation do
 
   @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
-  def next(state, %DateValidation{} = validation) do
-    ExCycle.State.update_next(state, validation, fn next ->
+  def next(state, %DateValidation{}) do
+    ExCycle.State.update_next(state, fn next ->
       next
       |> Date.end_of_month()
       |> NaiveDateTime.new!(NaiveDateTime.to_time(next))

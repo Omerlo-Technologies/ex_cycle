@@ -25,12 +25,12 @@ defmodule ExCycle do
   @doc """
   Adds a new rule using a frequency.
 
-  The frequency could be one of: `:secondly`, `:minutely`, `:hourly`, `:daily`, `:weekly`, `:monthly` or `yearly`.
+  The frequency could be one of: `:secondly`, `:minutely`, `:hourly`, `:daily`, `:weekly`, `:monthly` or `:yearly`.
 
   ## Options
 
   - `:interval`: the interval of the frequency (`interval: 2` will generate a `x + n * 2` result)
-  - `hours`: set a restricted on hours of the day (`hours: [20, 10]` will generate every "frequency" at "10:00" and "20:00")
+  - `:hours`: set a restricted on hours of the day (`hours: [20, 10]` will generate every "frequency" at "10:00" and "20:00")
 
   ## Examples
 
@@ -76,20 +76,15 @@ defmodule ExCycle do
   """
   @spec occurrences(t(), datetime()) :: Enumerable.t(NaiveDateTime.t() | ExCycle.Span.t())
   def occurrences(%ExCycle{} = cycle, from) do
-    initial_state = ExCycle.State.new(from)
-
     cycle
     |> Map.update!(:rules, fn rules ->
-      Enum.map(rules, &Rule.next(%{&1 | state: initial_state}))
+      Enum.map(rules, fn rule ->
+        rule
+        |> Map.update!(:state, &ExCycle.State.set_next(&1, from))
+        |> Rule.next()
+      end)
     end)
-    |> Stream.unfold(fn cycle ->
-      {rule, cycle} = get_next_occurrence(cycle)
-      {rule, cycle}
-    end)
-    |> Stream.map(fn
-      %Rule{duration: nil, state: state} -> state.next
-      %Rule{duration: duration, state: state} -> ExCycle.Span.new(state.next, duration)
-    end)
+    |> Stream.unfold(&get_next_occurrence/1)
   end
 
   defp get_next_occurrence(%ExCycle{rules: [first_rule | rules]} = cycle) do
@@ -99,7 +94,7 @@ defmodule ExCycle do
       rules
       |> Enum.with_index(1)
       |> Enum.reduce(default, fn {rule, index}, result ->
-        if rule.state && NaiveDateTime.compare(result.rule.state.next, rule.state.next) == :gt do
+        if datetime_compare(result.rule.state.result, rule.state.result) == :gt do
           %{index: index, rule: rule}
         else
           result
@@ -108,6 +103,28 @@ defmodule ExCycle do
 
     updated_rules = List.update_at([first_rule | rules], result.index, &Rule.next/1)
 
-    {result.rule, %{cycle | rules: updated_rules}}
+    {result.rule.state.result, %{cycle | rules: updated_rules}}
+  end
+
+  # NOTE because state's result could be a NaiveDateTime, DateTime, or a span with NaiveDateTime or DateTime
+  # We have to convert everything to a Etc/UTC to compare them and make sure to return the most recent result.
+  defp datetime_compare(%ExCycle.Span{from: left}, right) do
+    datetime_compare(left, right)
+  end
+
+  defp datetime_compare(left, %ExCycle.Span{from: right}) do
+    datetime_compare(left, right)
+  end
+
+  defp datetime_compare(%NaiveDateTime{} = left, right) do
+    datetime_compare(DateTime.from_naive!(left, "Etc/UTC"), right)
+  end
+
+  defp datetime_compare(left, %NaiveDateTime{} = right) do
+    datetime_compare(left, DateTime.from_naive!(right, "Etc/UTC"))
+  end
+
+  defp datetime_compare(left, right) do
+    DateTime.compare(left, right)
   end
 end

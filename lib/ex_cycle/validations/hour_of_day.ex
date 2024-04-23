@@ -38,14 +38,14 @@ defmodule ExCycle.Validations.HourOfDay do
 
   @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
-  def next(state, %HourOfDay{hours: hours} = validation) do
+  def next(state, %HourOfDay{hours: hours}) do
     next_hour = Enum.find(hours, &(&1 > state.next.hour)) || hd(hours)
 
     if state.next.hour == next_hour do
-      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, 1, :day))
+      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, 1, :day))
     else
       diff = rem(next_hour - state.next.hour + 24, 24)
-      ExCycle.State.update_next(state, validation, &NaiveDateTime.add(&1, diff, :hour))
+      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :hour))
     end
   end
 end
