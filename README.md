@@ -79,7 +79,7 @@ The first element is the frequency that could be one of `secondly`, `minutely`, 
 You can specified a duration using the option `:duration`. The value uses the `Duration` structured, introduced
 in elixir `1.17`.
 
-> For every Elixir's versions before `1.17`, you must clone this structure to obtain the same behaviour.
+> For every Elixir's versions before `1.17`, we have been cloned this structure to obtain the same behaviour.
 
 
 ### Timezones
