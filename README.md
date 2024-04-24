@@ -82,6 +82,14 @@ in elixir `1.17`.
 > For every Elixir's versions before `1.17`, we have been cloned this structure to obtain the same behaviour.
 
 
+### Options
+
+Here the list of option that you can use to generate the rule (using `ExCycle.add_rule/3`).
+
+- `:interval`
+- `:hours`
+- `:minutes`
+
 ### Timezones
 
 As we mention earlier, we support timezone and you can easily generate datetime using the option `timezone: "America/Montreal"` as the code bellow.
