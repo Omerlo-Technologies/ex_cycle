@@ -73,7 +73,10 @@ defmodule ExCycle.Rule do
     {start_at, opts} = Keyword.pop_lazy(opts, :starts_at, &NaiveDateTime.utc_now/0)
     {timezone, opts} = Keyword.pop(opts, :timezone)
 
-    opts = Keyword.put(opts, frequency, interval)
+    opts =
+      opts
+      |> Keyword.update(:excluded_dates, [], &cast_excluded_dates(&1, timezone))
+      |> Keyword.put(frequency, interval)
 
     %Rule{
       state: ExCycle.State.new(start_at),
@@ -83,6 +86,29 @@ defmodule ExCycle.Rule do
       until: until,
       duration: duration
     }
+  end
+
+  @doc """
+  Initializes the rule starting from the `from` datetime.
+
+  ## Examples
+
+      iex> init(%Rule{}, ~D[2024-01-01])
+      %ExCycle{}
+
+      iex> init(%Rule{}, ~N[2024-01-01 10:00:00])
+      %ExCycle{}
+
+  """
+  @spec init(t(), ExCycle.datetime()) :: t()
+  def init(rule, from) do
+    rule
+    |> Map.update!(:state, fn state ->
+      state
+      |> ExCycle.State.set_next(from)
+      |> do_next(rule.validations)
+    end)
+    |> generate_result()
   end
 
   @doc """
@@ -139,4 +165,20 @@ defmodule ExCycle.Rule do
   defp invalid?(state, %mod{} = validation) do
     !mod.valid?(state, validation)
   end
+
+  defp cast_excluded_dates(dates, timezone) do
+    Enum.map(dates, &cast_excluded_date(&1, timezone))
+  end
+
+  defp cast_excluded_date(%DateTime{} = datetime, timezone) do
+    if timezone do
+      datetime
+      |> DateTime.shift_zone!(timezone)
+      |> DateTime.to_naive()
+    else
+      DateTime.to_naive(datetime)
+    end
+  end
+
+  defp cast_excluded_date(date, _timezone), do: date
 end

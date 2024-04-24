@@ -46,6 +46,31 @@ defmodule ExCycleTest do
     end
   end
 
+  describe "excluded dates" do
+    test "with dates" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, excluded_dates: [~D[2024-01-02]], starts_at: ~D[2024-01-01])
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(2)
+
+      assert datetimes == [~N[2024-01-01 00:00:00], ~N[2024-01-03 00:00:00]]
+    end
+
+    test "with datetimes" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily,
+          excluded_dates: [~N[2024-01-02 10:00:00]],
+          starts_at: ~N[2024-01-01 10:00:00]
+        )
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(2)
+
+      assert datetimes == [~N[2024-01-01 10:00:00], ~N[2024-01-03 10:00:00]]
+    end
+  end
+
   describe "duration" do
     test "every day with 1h of duration" do
       spans =

@@ -41,7 +41,7 @@ defmodule ExCycle.Validations.Lock do
   end
 
   def next(state, %Lock{unit: :hour}) do
-    diff = state.origin.hour - state.next.hour + 24
+    diff = rem(state.origin.hour - state.next.hour + 24, 24)
     ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :hour))
   end
 
