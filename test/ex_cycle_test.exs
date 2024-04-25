@@ -265,4 +265,22 @@ defmodule ExCycleTest do
       assert datetimes == [~N[2024-01-03 10:00:00], ~N[2024-01-05 10:00:00]]
     end
   end
+
+  describe "with DaysOfMonth" do
+    test "every 1st and 10th" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, days_of_month: [10, 1], starts_at: ~N[2024-01-01 10:00:00])
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(5)
+
+      assert datetimes == [
+               ~N[2024-01-01 10:00:00],
+               ~N[2024-01-10 10:00:00],
+               ~N[2024-02-01 10:00:00],
+               ~N[2024-02-10 10:00:00],
+               ~N[2024-03-01 10:00:00]
+             ]
+    end
+  end
 end
