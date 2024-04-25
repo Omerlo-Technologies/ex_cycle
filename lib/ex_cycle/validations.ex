@@ -10,6 +10,7 @@ defmodule ExCycle.Validations do
   """
 
   alias ExCycle.Validations.{
+    DateExclusion,
     DateValidation,
     HourOfDay,
     Interval,
@@ -23,6 +24,7 @@ defmodule ExCycle.Validations do
           | Interval.t()
           | Lock.t()
           | DateValidation.t()
+          | DateExclusion.t()
 
   @callback valid?(ExCycle.State.t(), any_validation()) :: boolean()
 
@@ -31,7 +33,8 @@ defmodule ExCycle.Validations do
   @validations_order [
     :minute_of_hour,
     :hour_of_day,
-    :interval
+    :interval,
+    :excluded_dates
   ]
 
   @doc false
@@ -46,17 +49,96 @@ defmodule ExCycle.Validations do
   @spec build(Interval.frequency(), keyword()) :: [any_validation(), ...]
   def build(frequency, opts) do
     validations = Enum.reduce(opts, %{}, &build_validation/2)
-    locks = locks_for(frequency)
+    locks = locks_for(frequency, Map.keys(validations))
     sort(validations) ++ [DateValidation.new()] ++ locks
   end
 
-  # NOTE maybe `locks_for/1` must be handle directly in the interval validations
-  defp locks_for(:yearly), do: [Lock.new(:month), Lock.new(:day)]
-  defp locks_for(:monthly), do: [Lock.new(:day)]
-  defp locks_for(:weekly), do: [Lock.new(:week_day)]
-  defp locks_for(_interval), do: []
+  defp locks_for(:yearly, validations) do
+    add_lock(:second, validations)
+    |> add_lock(:minute, validations)
+    |> add_lock(:hour, validations)
+    |> add_lock(:day, validations)
+    |> add_lock(:month, validations)
+  end
+
+  defp locks_for(:monthly, validations) do
+    add_lock(:second, validations)
+    |> add_lock(:minute, validations)
+    |> add_lock(:hour, validations)
+    |> add_lock(:day, validations)
+  end
+
+  defp locks_for(:weekly, validations) do
+    add_lock(:second, validations)
+    |> add_lock(:minute, validations)
+    |> add_lock(:hour, validations)
+    |> add_lock(:week_day, validations)
+  end
+
+  defp locks_for(:daily, validations) do
+    add_lock(:second, validations)
+    |> add_lock(:minute, validations)
+    |> add_lock(:hour, validations)
+  end
+
+  defp locks_for(:hourly, validations) do
+    add_lock(:second, validations)
+    |> add_lock(:minute, validations)
+  end
+
+  defp locks_for(:minutely, validations) do
+    add_lock(:second, validations)
+  end
+
+  defp locks_for(:secondly, _validations_names) do
+    []
+  end
+
+  defp add_lock(locks \\ [], type, validations_names)
+
+  @exceptions [:second_of_minute]
+  defp add_lock(locks, :second, validations) do
+    if Enum.any?(validations, &(&1 in @exceptions)) do
+      locks
+    else
+      [Lock.new(:second) | locks]
+    end
+  end
+
+  @exceptions [:minute_of_hour, :second_of_minute]
+  defp add_lock(locks, :minute, validations) do
+    if Enum.any?(validations, &(&1 in @exceptions)) do
+      locks
+    else
+      [Lock.new(:minute) | locks]
+    end
+  end
+
+  @exceptions [:hour_of_day, :minute_of_hour, :second_of_minute]
+  defp add_lock(locks, :hour, validations) do
+    if Enum.any?(validations, &(&1 in @exceptions)) do
+      locks
+    else
+      [Lock.new(:hour) | locks]
+    end
+  end
+
+  defp add_lock(locks, :day, _validations) do
+    [Lock.new(:day) | locks]
+  end
+
+  defp add_lock(locks, :week_day, _validations) do
+    [Lock.new(:week_day) | locks]
+  end
+
+  defp add_lock(locks, :month, _validations) do
+    [Lock.new(:month) | locks]
+  end
 
   @doc false
+  defp build_validation({_opt, []}, validations), do: validations
+  defp build_validation({_opt, nil}, validations), do: validations
+
   defp build_validation({:minutes, minutes}, validations) do
     Map.put(validations, :minute_of_hour, MinuteOfHour.new(minutes))
   end
@@ -68,6 +150,10 @@ defmodule ExCycle.Validations do
   @frequencies [:secondly, :minutely, :hourly, :daily, :weekly, :monthly, :yearly]
   defp build_validation({frequency, interval}, validations) when frequency in @frequencies do
     Map.put(validations, :interval, Interval.new(frequency, interval))
+  end
+
+  defp build_validation({:excluded_dates, dates}, validations) do
+    Map.put(validations, :excluded_dates, DateExclusion.new(dates))
   end
 
   defp build_validation(_, validations), do: validations

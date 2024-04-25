@@ -78,11 +78,7 @@ defmodule ExCycle do
   def occurrences(%ExCycle{} = cycle, from) do
     cycle
     |> Map.update!(:rules, fn rules ->
-      Enum.map(rules, fn rule ->
-        rule
-        |> Map.update!(:state, &ExCycle.State.set_next(&1, from))
-        |> Rule.next()
-      end)
+      Enum.map(rules, &Rule.init(&1, from))
     end)
     |> Stream.unfold(&get_next_occurrence/1)
   end
