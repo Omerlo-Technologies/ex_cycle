@@ -12,6 +12,7 @@ defmodule ExCycle.Validations do
   alias ExCycle.Validations.{
     DateExclusion,
     DateValidation,
+    Days,
     DaysOfMonth,
     HourOfDay,
     Interval,
@@ -22,6 +23,7 @@ defmodule ExCycle.Validations do
   @type any_validation ::
           MinuteOfHour.t()
           | HourOfDay.t()
+          | Days.t()
           | DaysOfMonth.t()
           | Interval.t()
           | Lock.t()
@@ -36,6 +38,7 @@ defmodule ExCycle.Validations do
     :minute_of_hour,
     :hour_of_day,
     :days_of_month,
+    :days,
     :interval,
     :excluded_dates
   ]
@@ -157,6 +160,10 @@ defmodule ExCycle.Validations do
 
   defp build_validation({:days_of_month, days}, validations) do
     Map.put(validations, :days_of_month, DaysOfMonth.new(days))
+  end
+
+  defp build_validation({:days, days}, validations) do
+    Map.put(validations, :days, Days.new(days))
   end
 
   defp build_validation({:excluded_dates, dates}, validations) do

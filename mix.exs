@@ -47,7 +47,11 @@ defmodule ExCycle.MixProject do
         Validations: [
           ExCycle.Validations,
           ExCycle.Validations.Interval,
+          ExCycle.Validations.MinuteOfHour,
           ExCycle.Validations.HourOfDay,
+          ExCycle.Validations.Days,
+          ExCycle.Validations.DaysOfMonth,
+          ExCycle.Validations.DateExclusion,
           ExCycle.Validations.DateValidation,
           ExCycle.Validations.Lock
         ],

@@ -70,7 +70,7 @@ defmodule ExCycle.Rule do
     {count, opts} = Keyword.pop(opts, :count, nil)
     {until, opts} = Keyword.pop(opts, :until, nil)
     {interval, opts} = Keyword.pop(opts, :interval, 1)
-    {start_at, opts} = Keyword.pop_lazy(opts, :starts_at, &NaiveDateTime.utc_now/0)
+    {start_at, opts} = Keyword.pop(opts, :starts_at)
     {timezone, opts} = Keyword.pop(opts, :timezone)
 
     opts =
@@ -79,7 +79,7 @@ defmodule ExCycle.Rule do
       |> Keyword.put(frequency, interval)
 
     %Rule{
-      state: ExCycle.State.new(start_at),
+      state: if(start_at, do: ExCycle.State.new(start_at)),
       timezone: timezone,
       validations: Validations.build(frequency, opts),
       count: count,
@@ -104,7 +104,7 @@ defmodule ExCycle.Rule do
   def init(rule, from) do
     rule
     |> Map.update!(:state, fn state ->
-      state
+      (state || ExCycle.State.new(from))
       |> ExCycle.State.set_next(from)
       |> do_next(rule.validations)
     end)
