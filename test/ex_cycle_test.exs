@@ -283,4 +283,30 @@ defmodule ExCycleTest do
              ]
     end
   end
+
+  describe "days" do
+    test "every saturday, first monday and last sunday" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily,
+          days: [:saturday, {1, :monday}, {-1, :sunday}],
+          starts_at: ~N[2024-01-01 10:00:00]
+        )
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(10)
+
+      assert datetimes == [
+               ~N[2024-01-01 10:00:00],
+               ~N[2024-01-06 10:00:00],
+               ~N[2024-01-13 10:00:00],
+               ~N[2024-01-20 10:00:00],
+               ~N[2024-01-27 10:00:00],
+               ~N[2024-01-28 10:00:00],
+               ~N[2024-02-03 10:00:00],
+               ~N[2024-02-05 10:00:00],
+               ~N[2024-02-10 10:00:00],
+               ~N[2024-02-17 10:00:00]
+             ]
+    end
+  end
 end
