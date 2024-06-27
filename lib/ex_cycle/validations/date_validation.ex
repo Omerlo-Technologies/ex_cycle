@@ -28,6 +28,7 @@ defmodule ExCycle.Validations.DateValidation do
     ExCycle.State.update_next(state, fn next ->
       next
       |> Date.end_of_month()
+      |> Date.add(1)
       |> NaiveDateTime.new!(NaiveDateTime.to_time(next))
     end)
   end

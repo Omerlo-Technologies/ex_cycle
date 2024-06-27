@@ -6,7 +6,8 @@ defmodule ExCycle.Validations.IntervalTest do
   @moduletag origin: ~N[2024-04-04 00:00:00]
   @moduletag next: ~N[2024-04-04 00:00:00]
   setup %{origin: origin, next: next} do
-    %{state: ExCycle.State.new(origin, next)}
+    {:ok, state} = ExCycle.State.new(origin, next) |> ExCycle.State.set_result()
+    %{state: state}
   end
 
   @moduletag interval_value: 1
@@ -225,11 +226,11 @@ defmodule ExCycle.Validations.IntervalTest do
     end
 
     @tag interval_value: 2
-    @tag origin: ~D[2024-11-04]
-    @tag next: ~D[2024-11-04]
+    @tag origin: ~D[2024-11-01]
+    @tag next: ~D[2024-11-01]
     test "with year shifting", %{state: state, interval: interval} do
       state = Interval.next(state, interval)
-      assert state.next == ~N[2025-01-04 00:00:00]
+      assert state.next == ~N[2025-01-01 00:00:00]
     end
   end
 
