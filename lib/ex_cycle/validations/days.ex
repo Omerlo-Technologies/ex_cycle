@@ -115,7 +115,7 @@ defmodule ExCycle.Validations.Days do
     diff_week_day = rem(day_number(week_day) - curr_week_day + 7, 7)
     next = NaiveDateTime.add(from, 7 * week + diff_week_day, :day)
 
-    if NaiveDateTime.compare(next, datetime) == :gt do
+    if NaiveDateTime.compare(datetime, next) == :lt do
       next
     else
       time = NaiveDateTime.to_time(datetime)
@@ -138,7 +138,10 @@ defmodule ExCycle.Validations.Days do
     last_day = Date.end_of_month(datetime)
     total_weeks = last_day.day |> Kernel./(7) |> ceil()
 
-    if day_number <= Date.day_of_week(last_day) do
+    first_day_of_last_week_number = last_day |> Date.beginning_of_week() |> Date.day_of_week()
+    last_day_number = Date.day_of_week(last_day)
+
+    if day_number <= last_day_number && day_number >= first_day_of_last_week_number do
       total_weeks + 1 + week == curr_week && curr_day_of_week == day_number
     else
       total_weeks + week == curr_week && curr_day_of_week == day_number
@@ -146,8 +149,18 @@ defmodule ExCycle.Validations.Days do
   end
 
   defp valid_day?(datetime, {week, day}) do
+    day_number = day_number(day)
     datetime_week = get_week(datetime)
-    week == datetime_week && Date.day_of_week(datetime) == day_number(day)
+    first_day_number = datetime |> Date.beginning_of_month() |> Date.day_of_week()
+
+    last_day_of_first_week_number =
+      datetime |> Date.beginning_of_month() |> Date.end_of_week() |> Date.day_of_week()
+
+    if day_number >= first_day_number && day_number <= last_day_of_first_week_number do
+      week == datetime_week && Date.day_of_week(datetime) == day_number
+    else
+      week + 1 == datetime_week && Date.day_of_week(datetime) == day_number
+    end
   end
 
   defp valid_day?(datetime, day) do
@@ -155,7 +168,12 @@ defmodule ExCycle.Validations.Days do
   end
 
   defp get_week(datetime) do
-    datetime |> Date.beginning_of_week() |> Map.get(:day) |> div(7) |> Kernel.+(1)
+    {year, month, day} = Date.to_erl(datetime)
+    first_day_of_month = Date.new!(year, month, 1)
+    day_of_week = Date.day_of_week(first_day_of_month)
+
+    offset = day_of_week - 1
+    div(day + offset - 1, 7) + 1
   end
 
   @day %{monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7}

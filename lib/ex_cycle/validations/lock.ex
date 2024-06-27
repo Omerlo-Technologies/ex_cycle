@@ -46,12 +46,18 @@ defmodule ExCycle.Validations.Lock do
   end
 
   def next(state, %Lock{unit: :day}) do
-    shift_years = state.next.year + div(state.next.month, 12)
-    shift_months = rem(state.next.month, 12) + 1
+    if state.origin.day > state.next.day do
+      ExCycle.State.update_next(state, fn next ->
+        %{next | day: state.origin.day}
+      end)
+    else
+      shift_years = state.next.year + div(state.next.month, 12)
+      shift_months = rem(state.next.month, 12) + 1
 
-    ExCycle.State.update_next(state, fn next ->
-      %{next | year: shift_years, month: shift_months, day: state.origin.day}
-    end)
+      ExCycle.State.update_next(state, fn next ->
+        %{next | year: shift_years, month: shift_months, day: state.origin.day}
+      end)
+    end
   end
 
   def next(state, %Lock{unit: :month}) do

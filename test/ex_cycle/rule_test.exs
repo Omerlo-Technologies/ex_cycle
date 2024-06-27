@@ -20,7 +20,7 @@ defmodule ExCycle.RuleTest do
   end
 
   describe "next/1" do
-    test "daily" do
+    test "daily at 20 and 10" do
       rule =
         Rule.new(:daily, interval: 2, hours: [20, 10])
         |> Map.put(:state, ExCycle.State.new(~D[2024-04-04]))
@@ -38,79 +38,68 @@ defmodule ExCycle.RuleTest do
       assert rule.state.next == ~N[2024-04-06 20:00:00]
     end
 
+    test "daily" do
+      rule = Rule.new(:daily, interval: 2) |> Rule.init(~D[2024-04-04])
+      assert rule.state.next == ~N[2024-04-04 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-04-06 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-04-08 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-04-10 00:00:00]
+    end
+
     test "weekly" do
-      rule =
-        Rule.new(:weekly, interval: 2, hours: [20, 10])
-        |> Map.put(:state, ExCycle.State.new(~D[2024-04-04]))
+      rule = Rule.new(:weekly, interval: 2) |> Rule.init(~D[2024-04-04])
+      assert rule.state.next == ~N[2024-04-04 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-04-04 10:00:00]
+      assert rule.state.next == ~N[2024-04-18 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-04-04 20:00:00]
-
-      rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-04-18 10:00:00]
-
-      rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-04-18 20:00:00]
+      assert rule.state.next == ~N[2024-05-02 00:00:00]
     end
 
     test "monthly" do
-      rule =
-        Rule.new(:monthly, interval: 2, hours: [20, 10])
-        |> Map.put(:state, ExCycle.State.new(~D[2024-04-30]))
+      rule = Rule.new(:monthly, interval: 2) |> Rule.init(~D[2024-04-30])
+      assert rule.state.next == ~N[2024-04-30 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-04-30 10:00:00]
+      assert rule.state.next == ~N[2024-06-30 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-04-30 20:00:00]
+      assert rule.state.next == ~N[2024-08-30 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-06-30 10:00:00]
-
-      rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-06-30 20:00:00]
+      assert rule.state.next == ~N[2024-10-30 00:00:00]
     end
 
     test "monthly with leap month" do
-      rule =
-        Rule.new(:monthly, interval: 1, hours: [20, 10])
-        |> Map.put(:state, ExCycle.State.new(~D[2024-01-30]))
-
-      rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-01-30 10:00:00]
-
-      rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-01-30 20:00:00]
+      rule = Rule.new(:monthly, interval: 1) |> Rule.init(~D[2024-01-30])
+      assert rule.state.next == ~N[2024-01-30 00:00:00]
 
       # NOTE: February is skipped because it's an invalid date
       # See [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545) page 42
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-03-30 10:00:00]
+      assert rule.state.next == ~N[2024-03-30 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-03-30 20:00:00]
+      assert rule.state.next == ~N[2024-04-30 00:00:00]
     end
 
     test "yearly with leap year" do
-      rule =
-        Rule.new(:yearly, interval: 2, hours: [20, 10])
-        |> Map.put(:state, ExCycle.State.new(~D[2024-02-29]))
+      rule = Rule.new(:yearly, interval: 2) |> Rule.init(~D[2024-02-29])
+      assert rule.state.next == ~N[2024-02-29 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-02-29 10:00:00]
+      assert rule.state.next == ~N[2028-02-29 00:00:00]
 
       rule = Rule.next(rule)
-      assert rule.state.next == ~N[2024-02-29 20:00:00]
-
-      rule = Rule.next(rule)
-      assert rule.state.next == ~N[2028-02-29 10:00:00]
-
-      rule = Rule.next(rule)
-      assert rule.state.next == ~N[2028-02-29 20:00:00]
+      assert rule.state.next == ~N[2032-02-29 00:00:00]
     end
   end
 end
