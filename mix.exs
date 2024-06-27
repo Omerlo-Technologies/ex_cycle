@@ -1,7 +1,7 @@
 defmodule ExCycle.MixProject do
   use Mix.Project
 
-  @version "0.3.0"
+  @version "0.4.0"
 
   def project do
     [
@@ -41,6 +41,7 @@ defmodule ExCycle.MixProject do
     [
       main: "readme",
       source_ref: @version,
+      source_url: "https://github.com/Omerlo-Technologies/ex_cycle",
       extras: ["README.md"],
       groups_for_modules: [
         "Internal Modules": [ExCycle.Rule, ExCycle.State, ExCycle.Span],
