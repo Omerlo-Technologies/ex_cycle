@@ -8,10 +8,12 @@ defmodule ExCycle.State do
   @type t :: %State{
           origin: NaiveDateTime.t(),
           next: NaiveDateTime.t(),
-          result: DateTime.t() | NaiveDateTime.t() | ExCycle.Span.t() | nil
+          result: DateTime.t() | NaiveDateTime.t() | ExCycle.Span.t() | nil,
+          exhausted?: boolean(),
+          iteration: non_neg_integer()
         }
 
-  defstruct [:origin, :next, :result]
+  defstruct [:origin, :next, :result, exhausted?: false, iteration: 0]
 
   @type datetime :: Date.t() | DateTime.t() | NaiveDateTime.t()
 
@@ -86,7 +88,7 @@ defmodule ExCycle.State do
   end
 
   def set_result(state) do
-    {:ok, %{state | result: state.next}}
+    {:ok, %{state | result: state.next, iteration: state.iteration + 1}}
   end
 
   def apply_duration(state, nil), do: {:ok, state}
@@ -126,6 +128,24 @@ defmodule ExCycle.State do
     case DateTime.from_naive(state.result, timezone) do
       {:ok, datetime} -> {:ok, %{state | result: datetime}}
       _ -> {:error, state}
+    end
+  end
+
+  def check_exhaust(state, nil), do: {:ok, state}
+
+  def check_exhaust(state, count) when is_integer(count) do
+    if count < state.iteration do
+      {:exhausted, state}
+    else
+      {:ok, state}
+    end
+  end
+
+  def check_exhaust(state, until) do
+    if Date.compare(state.next, until) == :gt do
+      {:exhausted, state}
+    else
+      {:ok, state}
     end
   end
 

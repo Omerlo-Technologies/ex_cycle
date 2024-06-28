@@ -19,13 +19,35 @@ defmodule ExCycle.RuleTest do
     end
   end
 
-  describe "next/1" do
-    test "daily at 20 and 10" do
-      rule =
-        Rule.new(:daily, interval: 2, hours: [20, 10])
-        |> Map.put(:state, ExCycle.State.new(~D[2024-04-04]))
+  describe "count option" do
+    test "rule's state must be exhausted" do
+      rule = Rule.new(:daily, count: 2) |> Rule.init(~D[2024-04-04])
+      assert rule.state.next
 
       rule = Rule.next(rule)
+      assert rule.state.next
+
+      rule = Rule.next(rule)
+      assert rule.state.exhausted?
+    end
+  end
+
+  describe "until option" do
+    test "rule's state must be exhausted" do
+      rule = Rule.new(:daily, until: ~D[2024-04-05]) |> Rule.init(~D[2024-04-04])
+      assert rule.state.next
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-04-05 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.exhausted?
+    end
+  end
+
+  describe "next/1" do
+    test "daily at 20 and 10" do
+      rule = Rule.new(:daily, interval: 2, hours: [20, 10]) |> Rule.init(~D[2024-04-04])
       assert rule.state.next == ~N[2024-04-04 10:00:00]
 
       rule = Rule.next(rule)
