@@ -22,9 +22,10 @@ defmodule ExCycle.Rule do
 
   ## Options
 
-  - `duration`: A simple `Duration` struct.
-  - `count` (not implemented yet).
-  - `until` (not implemented yet).
+  - `duration`: a simple `Duration` struct.
+  - `count`: the maximum number of recurrences to generate (default: `nil`).
+  - `until`: the end date and time for the recurrence. If an occurrence coincides exactly with the `until` timestamp,
+    it will be included in the set of generated occurrences.
   - `interval`: base interval of the recurren rule (daily, weekly ....).
   - `start_at`: Reference date to used to every recurrent event generated.
   - `timezone`: TimeZone to use when generating recurrent dates.
@@ -140,9 +141,14 @@ defmodule ExCycle.Rule do
   defp generate_result(rule) do
     with {:ok, state} <- ExCycle.State.set_result(rule.state),
          {:ok, state} <- ExCycle.State.apply_duration(state, rule.duration),
-         {:ok, state} <- ExCycle.State.apply_timezone(state, rule.timezone) do
+         {:ok, state} <- ExCycle.State.apply_timezone(state, rule.timezone),
+         {:ok, state} <- ExCycle.State.check_exhaust(state, rule.until),
+         {:ok, state} <- ExCycle.State.check_exhaust(state, rule.count) do
       Map.put(rule, :state, state)
     else
+      {:exhausted, state} ->
+        Map.put(rule, :state, %{state | exhausted?: true})
+
       {:error, state} ->
         rule
         |> Map.put(:state, %{state | origin: state.next})

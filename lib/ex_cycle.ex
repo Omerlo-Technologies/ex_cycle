@@ -83,23 +83,29 @@ defmodule ExCycle do
     |> Stream.unfold(&get_next_occurrence/1)
   end
 
-  defp get_next_occurrence(%ExCycle{rules: [first_rule | rules]} = cycle) do
-    default = %{rule: first_rule, index: 0}
-
+  defp get_next_occurrence(%ExCycle{} = cycle) do
     result =
-      rules
-      |> Enum.with_index(1)
-      |> Enum.reduce(default, fn {rule, index}, result ->
-        if datetime_compare(result.rule.state.result, rule.state.result) == :gt do
-          %{index: index, rule: rule}
-        else
-          result
-        end
-      end)
+      cycle.rules
+      |> Enum.with_index()
+      |> Enum.reject(fn {rule, _index} -> rule.state.exhausted? end)
+      |> do_get_next_occurrence()
 
-    updated_rules = List.update_at([first_rule | rules], result.index, &Rule.next/1)
+    with {rule, index} <- result do
+      updated_rules = List.update_at(cycle.rules, index, &Rule.next/1)
+      {rule.state.result, %{cycle | rules: updated_rules}}
+    end
+  end
 
-    {result.rule.state.result, %{cycle | rules: updated_rules}}
+  defp do_get_next_occurrence([]), do: nil
+
+  defp do_get_next_occurrence([default | rules]) do
+    Enum.reduce(rules, default, fn {rule, index}, {curr_rule, curr_index} ->
+      if datetime_compare(curr_rule.state.result, rule.state.result) == :gt do
+        {rule, index}
+      else
+        {curr_rule, curr_index}
+      end
+    end)
   end
 
   # NOTE because state's result could be a NaiveDateTime, DateTime, or a span with NaiveDateTime or DateTime
