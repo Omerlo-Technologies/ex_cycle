@@ -4,8 +4,8 @@ defmodule ExCycle.RuleTest do
   alias ExCycle.Rule
 
   describe "new/2" do
-    test "build rule for: daily at hours [10, 20]" do
-      rule = Rule.new(:daily, interval: 2, hours: [20, 10])
+    test "build rule for: daily at hours [10, 20] for 1h" do
+      rule = Rule.new(:daily, interval: 2, hours: [20, 10], duration: %Duration{hour: 1})
 
       expected_validations = [
         %ExCycle.Validations.HourOfDay{hours: [10, 20]},
@@ -16,6 +16,12 @@ defmodule ExCycle.RuleTest do
       ]
 
       assert rule.validations == expected_validations
+      assert rule.duration == %Duration{hour: 1}
+    end
+
+    test "zero duration is removed" do
+      rule = Rule.new(:daily, duration: %Duration{})
+      assert is_nil(rule.duration)
     end
   end
 
