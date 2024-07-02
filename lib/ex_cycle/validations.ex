@@ -38,8 +38,8 @@ defmodule ExCycle.Validations do
     :minute_of_hour,
     :hour_of_day,
     :days_of_month,
-    :interval,
     :days,
+    :interval,
     :excluded_dates
   ]
 
@@ -138,8 +138,13 @@ defmodule ExCycle.Validations do
     end
   end
 
-  defp add_lock(locks, :week_day, _validations) do
-    [Lock.new(:week_day) | locks]
+  @exceptions [:days]
+  defp add_lock(locks, :week_day, validations) do
+    if Enum.any?(validations, &(&1 in @exceptions)) do
+      locks
+    else
+      [Lock.new(:week_day) | locks]
+    end
   end
 
   defp add_lock(locks, :month, _validations) do

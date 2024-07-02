@@ -91,6 +91,17 @@ defmodule ExCycle.RuleTest do
       assert rule.state.next == ~N[2024-05-02 00:00:00]
     end
 
+    test "weekly on monday and tuesday" do
+      rule = Rule.new(:weekly, days: [:monday, :tuesday]) |> Rule.init(~D[2024-04-01])
+      assert rule.state.next == ~N[2024-04-01 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-04-02 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-04-08 00:00:00]
+    end
+
     test "monthly" do
       rule = Rule.new(:monthly, interval: 2) |> Rule.init(~D[2024-04-30])
       assert rule.state.next == ~N[2024-04-30 00:00:00]
