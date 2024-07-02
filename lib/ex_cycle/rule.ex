@@ -85,8 +85,20 @@ defmodule ExCycle.Rule do
       validations: Validations.build(frequency, opts),
       count: count,
       until: until,
-      duration: duration
+      duration: if(valid_duration?(duration), do: duration)
     }
+  end
+
+  defp valid_duration?(duration) do
+    case duration do
+      %Duration{} ->
+        duration
+        |> Map.take([:week, :day, :hour, :minute, :second])
+        |> Enum.any?(fn {_unit, value} -> value != 0 end)
+
+      _ ->
+        false
+    end
   end
 
   @doc """
