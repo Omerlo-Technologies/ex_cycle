@@ -11,7 +11,6 @@ defmodule ExCycle.Validations do
 
   alias ExCycle.Validations.{
     DateExclusion,
-    DateValidation,
     Days,
     DaysOfMonth,
     HourOfDay,
@@ -27,7 +26,6 @@ defmodule ExCycle.Validations do
           | DaysOfMonth.t()
           | Interval.t()
           | Lock.t()
-          | DateValidation.t()
           | DateExclusion.t()
 
   @callback valid?(ExCycle.State.t(), any_validation()) :: boolean()
@@ -56,7 +54,7 @@ defmodule ExCycle.Validations do
   def build(frequency, opts) do
     validations = Enum.reduce(opts, %{}, &build_validation/2)
     locks = locks_for(frequency, Map.keys(validations))
-    sort(validations) ++ [DateValidation.new()] ++ locks
+    sort(validations) ++ locks
   end
 
   defp locks_for(:yearly, validations) do

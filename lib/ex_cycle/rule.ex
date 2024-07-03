@@ -169,6 +169,8 @@ defmodule ExCycle.Rule do
   end
 
   defp do_next(state, validations) do
+    state = ExCycle.State.ensure_valid(state)
+
     case Enum.find(validations, &invalid?(state, &1)) do
       %mod{} = invalid_validation ->
         state
