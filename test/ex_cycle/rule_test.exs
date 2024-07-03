@@ -10,7 +10,6 @@ defmodule ExCycle.RuleTest do
       expected_validations = [
         %ExCycle.Validations.HourOfDay{hours: [10, 20]},
         %ExCycle.Validations.Interval{frequency: :daily, value: 2},
-        %ExCycle.Validations.DateValidation{},
         %ExCycle.Validations.Lock{unit: :minute},
         %ExCycle.Validations.Lock{unit: :second}
       ]
@@ -139,6 +138,17 @@ defmodule ExCycle.RuleTest do
 
       rule = Rule.next(rule)
       assert rule.state.next == ~N[2032-02-29 00:00:00]
+    end
+
+    test "days_of_month 30" do
+      rule = Rule.new(:monthly, interval: 1, days_of_month: [30]) |> Rule.init(~D[2024-01-30])
+      assert rule.state.next == ~N[2024-01-30 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-03-30 00:00:00]
+
+      rule = Rule.next(rule)
+      assert rule.state.next == ~N[2024-04-30 00:00:00]
     end
   end
 end

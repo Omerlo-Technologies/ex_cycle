@@ -149,6 +149,19 @@ defmodule ExCycle.State do
     end
   end
 
+  def ensure_valid(state) do
+    if Calendar.ISO.valid_date?(state.next.year, state.next.month, state.next.day) do
+      state
+    else
+      ExCycle.State.update_next(state, fn next ->
+        next
+        |> Date.end_of_month()
+        |> Date.add(1)
+        |> NaiveDateTime.new!(NaiveDateTime.to_time(next))
+      end)
+    end
+  end
+
   defp to_naive(%Date{} = date), do: NaiveDateTime.new!(date, ~T[00:00:00])
   defp to_naive(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
   defp to_naive(%NaiveDateTime{} = datetime), do: datetime

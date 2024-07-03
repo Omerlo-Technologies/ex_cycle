@@ -39,7 +39,7 @@ defmodule ExCycle.Validations.DaysOfMonth do
   def next(state, %DaysOfMonth{days: days}) do
     next_day = Enum.find(days, &(&1 > state.next.day)) || hd(days)
 
-    if next_day > Date.days_in_month(state.next) || next_day < state.next.day do
+    if next_day > Date.days_in_month(state.next) || next_day <= state.next.day do
       shift_years = state.next.year + div(state.next.month, 12)
       shift_months = rem(state.next.month, 12) + 1
 
