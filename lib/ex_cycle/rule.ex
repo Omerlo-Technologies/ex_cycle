@@ -144,6 +144,7 @@ defmodule ExCycle.Rule do
     rule
     |> Map.update!(:state, fn state ->
       state
+      |> Map.put(:origin, state.next)
       |> mod.next(first_validation)
       |> do_next(rule.validations)
     end)
