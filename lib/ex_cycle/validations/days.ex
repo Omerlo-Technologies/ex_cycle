@@ -61,8 +61,8 @@ defmodule ExCycle.Validations.Days do
   @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
   def next(state, %Days{days: days, days_by_week: days_by_week}) do
-    next_day = get_next_day(state.next, days)
-    next_day_by_week = get_next_day_by_week(state.next, days_by_week)
+    next_day = get_next_day(state.origin, days)
+    next_day_by_week = get_next_day_by_week(state.origin, days_by_week)
 
     cond do
       is_nil(next_day) -> next_day_by_week
@@ -113,7 +113,8 @@ defmodule ExCycle.Validations.Days do
   defp do_get_next_day_by_week(datetime, {week, week_day}, from, shift) do
     curr_week_day = Date.day_of_week(from)
     diff_week_day = rem(day_number(week_day) - curr_week_day + 7, 7)
-    next = NaiveDateTime.add(from, 7 * week + diff_week_day, :day)
+    delta_week = if diff_week_day == 0 and week < 0, do: 1, else: 0
+    next = NaiveDateTime.add(from, 7 * (week + delta_week) + diff_week_day, :day)
 
     if NaiveDateTime.compare(datetime, next) == :lt do
       next
@@ -134,9 +135,9 @@ defmodule ExCycle.Validations.Days do
   defp valid_day?(datetime, {week, day}) when week < 0 do
     day_number = day_number(day)
     curr_day_of_week = Date.day_of_week(datetime)
-    curr_week = get_week(datetime)
+    curr_week = week_of_month(datetime)
     last_day = Date.end_of_month(datetime)
-    total_weeks = last_day.day |> Kernel./(7) |> ceil()
+    total_weeks = week_of_month(last_day)
 
     first_day_of_last_week_number = last_day |> Date.beginning_of_week() |> Date.day_of_week()
     last_day_number = Date.day_of_week(last_day)
@@ -150,7 +151,7 @@ defmodule ExCycle.Validations.Days do
 
   defp valid_day?(datetime, {week, day}) do
     day_number = day_number(day)
-    datetime_week = get_week(datetime)
+    datetime_week = week_of_month(datetime)
     first_day_number = datetime |> Date.beginning_of_month() |> Date.day_of_week()
 
     last_day_of_first_week_number =
@@ -167,13 +168,10 @@ defmodule ExCycle.Validations.Days do
     Date.day_of_week(datetime) == day_number(day)
   end
 
-  defp get_week(datetime) do
-    {year, month, day} = Date.to_erl(datetime)
-    first_day_of_month = Date.new!(year, month, 1)
-    day_of_week = Date.day_of_week(first_day_of_month)
-
-    offset = day_of_week - 1
-    div(day + offset - 1, 7) + 1
+  defp week_of_month(date) do
+    first_of_month = Date.beginning_of_month(date)
+    first_of_month_day_number = Date.day_of_week(first_of_month)
+    div(date.day + first_of_month_day_number - 2, 7) + 1
   end
 
   @day %{monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7}
