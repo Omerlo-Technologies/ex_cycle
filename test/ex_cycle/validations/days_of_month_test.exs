@@ -21,6 +21,12 @@ defmodule ExCycle.Validations.DaysOfMonthTest do
   end
 
   describe "next/2" do
+    test "next should reset the time", %{state: state} do
+      validation = DaysOfMonth.new([20])
+      new_state = DaysOfMonth.next(state, validation)
+      assert NaiveDateTime.to_time(new_state.next) == ~T[00:00:00]
+    end
+
     test "next day of same month", %{state: state} do
       validation = DaysOfMonth.new([20])
       new_state = DaysOfMonth.next(state, validation)

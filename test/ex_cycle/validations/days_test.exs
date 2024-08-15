@@ -67,6 +67,13 @@ defmodule ExCycle.Validations.DaysTest do
   end
 
   describe "next/2" do
+    @tag datetime: ~N[2024-04-30 10:00:00]
+    test "next should reset the time", %{state: state} do
+      validation = Days.new([:monday])
+      new_state = Days.next(state, validation)
+      assert NaiveDateTime.to_time(new_state.next) == ~T[00:00:00]
+    end
+
     test "next day of same month", %{state: state} do
       validation = Days.new([:monday])
       new_state = Days.next(state, validation)

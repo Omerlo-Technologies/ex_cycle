@@ -45,6 +45,8 @@ defmodule ExCycle.Validations.DaysOfMonth do
 
       ExCycle.State.update_next(state, fn next ->
         %{next | year: shift_years, month: shift_months, day: next_day}
+        |> NaiveDateTime.to_date()
+        |> NaiveDateTime.new!(~T[00:00:00])
       end)
     else
       ExCycle.State.update_next(state, fn next ->
