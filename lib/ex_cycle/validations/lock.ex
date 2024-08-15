@@ -38,7 +38,7 @@ defmodule ExCycle.Validations.Lock do
   def next(state, %Lock{unit: unit}) when unit in [:second, :minute] do
     diff = Map.get(state.origin, unit) - Map.get(state.next, unit)
 
-    if diff > 0 do
+    if diff >= 0 do
       ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, unit))
     else
       ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff + 60, unit))
@@ -48,7 +48,7 @@ defmodule ExCycle.Validations.Lock do
   def next(state, %Lock{unit: :hour}) do
     diff = state.origin.hour - state.next.hour
 
-    if diff > 0 do
+    if diff >= 0 do
       ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :hour))
     else
       ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff + 24, :hour))

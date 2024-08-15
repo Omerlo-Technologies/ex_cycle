@@ -61,7 +61,7 @@ defmodule ExCycle.Validations.Days do
   @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
   def next(state, %Days{days: days, days_by_week: days_by_week}) do
-    origin_date = NaiveDateTime.to_date(state.origin)
+    origin_date = NaiveDateTime.to_date(state.next)
     next_date = get_next_date(origin_date, days)
     next_date_by_week = get_next_date_by_week(origin_date, days_by_week)
 
