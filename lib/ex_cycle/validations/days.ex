@@ -61,20 +61,22 @@ defmodule ExCycle.Validations.Days do
   @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
   def next(state, %Days{days: days, days_by_week: days_by_week}) do
-    next_day = get_next_day(state.origin, days)
-    next_day_by_week = get_next_day_by_week(state.origin, days_by_week)
+    origin_date = NaiveDateTime.to_date(state.origin)
+    next_date = get_next_date(origin_date, days)
+    next_date_by_week = get_next_date_by_week(origin_date, days_by_week)
 
     cond do
-      is_nil(next_day) -> next_day_by_week
-      is_nil(next_day_by_week) -> next_day
-      NaiveDateTime.compare(next_day, next_day_by_week) == :lt -> next_day
-      true -> next_day_by_week
+      is_nil(next_date) -> next_date_by_week
+      is_nil(next_date_by_week) -> next_date
+      Date.compare(next_date, next_date_by_week) == :lt -> next_date
+      true -> next_date_by_week
     end
+    |> NaiveDateTime.new!(~T[00:00:00])
     |> then(&ExCycle.State.set_next(state, &1))
   end
 
-  defp get_next_day(datetime, days) do
-    curr_day_of_week = Date.day_of_week(datetime)
+  defp get_next_date(date, days) do
+    curr_day_of_week = Date.day_of_week(date)
     next_day = Enum.find(days, &(day_number(&1) > curr_day_of_week)) || List.first(days)
 
     if next_day do
@@ -82,53 +84,49 @@ defmodule ExCycle.Validations.Days do
       diff = rem(next_day_of_week - curr_day_of_week + 7, 7)
 
       if diff == 0 do
-        NaiveDateTime.add(datetime, 7, :day)
+        Date.add(date, 7)
       else
-        NaiveDateTime.add(datetime, diff, :day)
+        Date.add(date, diff)
       end
     end
   end
 
-  defp get_next_day_by_week(datetime, days_by_week) do
-    datetimes =
+  defp get_next_date_by_week(date, days_by_week) do
+    dates =
       Enum.map(days_by_week, fn
         {week, week_day} when week < 0 ->
-          do_get_next_day_by_week(datetime, {week, week_day}, &Date.end_of_month/1)
+          do_get_next_date_by_week(date, {week, week_day}, &Date.end_of_month/1)
 
         {week, week_day} ->
-          do_get_next_day_by_week(datetime, {week - 1, week_day}, &Date.beginning_of_month/1)
+          do_get_next_date_by_week(date, {week - 1, week_day}, &Date.beginning_of_month/1)
       end)
 
-    unless Enum.empty?(datetimes) do
-      Enum.min_by(datetimes, &NaiveDateTime.to_iso8601/1)
+    unless Enum.empty?(dates) do
+      Enum.min_by(dates, &Date.to_iso8601/1)
     end
   end
 
-  defp do_get_next_day_by_week(datetime, {week, week_day}, shift) do
-    time = NaiveDateTime.to_time(datetime)
-    from = datetime |> shift.() |> NaiveDateTime.new!(time)
-    do_get_next_day_by_week(datetime, {week, week_day}, from, shift)
+  defp do_get_next_date_by_week(date, {week, week_day}, shift) do
+    from = shift.(date)
+    do_get_next_date_by_week(date, {week, week_day}, from, shift)
   end
 
-  defp do_get_next_day_by_week(datetime, {week, week_day}, from, shift) do
+  defp do_get_next_date_by_week(date, {week, week_day}, from, shift) do
     curr_week_day = Date.day_of_week(from)
     diff_week_day = rem(day_number(week_day) - curr_week_day + 7, 7)
     delta_week = if diff_week_day == 0 and week < 0, do: 1, else: 0
-    next = NaiveDateTime.add(from, 7 * (week + delta_week) + diff_week_day, :day)
+    next_date = Date.add(from, 7 * (week + delta_week) + diff_week_day)
 
-    if NaiveDateTime.compare(datetime, next) == :lt do
-      next
+    if Date.compare(date, next_date) == :lt do
+      next_date
     else
-      time = NaiveDateTime.to_time(datetime)
-
       new_from =
         from
         |> Date.end_of_month()
         |> Date.add(1)
         |> shift.()
-        |> NaiveDateTime.new!(time)
 
-      do_get_next_day_by_week(datetime, {week, week_day}, new_from, shift)
+      do_get_next_date_by_week(date, {week, week_day}, new_from, shift)
     end
   end
 
