@@ -44,6 +44,16 @@ defmodule ExCycleTest do
                ~N[2024-03-04 10:00:00]
              ]
     end
+
+    test "rule starts_at must be used instead of occurrence starts_at" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, starts_at: ~D[2024-01-02])
+        |> ExCycle.occurrences(~D[2024-01-01])
+        |> Enum.take(2)
+
+      assert datetimes == [~N[2024-01-02 00:00:00], ~N[2024-01-03 00:00:00]]
+    end
   end
 
   describe "excluded dates" do

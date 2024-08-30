@@ -117,8 +117,13 @@ defmodule ExCycle.Rule do
   def init(rule, from) do
     rule
     |> Map.update!(:state, fn state ->
-      (state || ExCycle.State.new(from))
-      |> ExCycle.State.set_next(from)
+      state = state || ExCycle.State.new(from)
+
+      if Date.compare(state.next, from) == :lt do
+        ExCycle.State.set_next(state, from)
+      else
+        state
+      end
       |> do_next(rule.validations)
     end)
     |> generate_result()
