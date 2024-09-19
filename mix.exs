@@ -11,6 +11,15 @@ defmodule ExCycle.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      dialyzer: [
+        plt_local_path: "priv/plts",
+        plt_add_apps: [:ex_unit, :mix],
+        ignore_warnings: ".ignore-warnings.exs",
+        flags: [:error_handling, :extra_return, :missing_return, :underspecs]
+      ],
+      preferred_cli_env: [
+        dialyzer: :test,
+      ],
       docs: docs(),
       description: description(),
       package: package()
@@ -33,7 +42,8 @@ defmodule ExCycle.MixProject do
     [
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.32", only: :dev, runtime: false},
-      {:tz, "~> 0.26.5", only: [:dev, :test]}
+      {:tz, "~> 0.26.5", only: [:dev, :test]},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
 

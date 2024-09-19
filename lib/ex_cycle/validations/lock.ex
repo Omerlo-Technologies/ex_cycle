@@ -76,7 +76,7 @@ defmodule ExCycle.Validations.Lock do
     end)
   end
 
-  def next(state, %Lock{unit: :week_day}) do
+  def next(%ExCycle.State{} = state, %Lock{unit: :week_day}) do
     origin_day_week = Date.day_of_week(state.origin)
     next_day_week = Date.day_of_week(state.next)
 
