@@ -18,7 +18,7 @@ defmodule ExCycle.MixProject do
         flags: [:error_handling, :extra_return, :missing_return, :underspecs]
       ],
       preferred_cli_env: [
-        dialyzer: :test,
+        dialyzer: :test
       ],
       docs: docs(),
       description: description(),
