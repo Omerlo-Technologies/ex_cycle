@@ -45,7 +45,7 @@ defmodule ExCycle do
       }
 
   """
-  @spec add_rule(t(), ExCycle.Validations.Interval.t(), keyword()) :: t()
+  @spec add_rule(t(), ExCycle.Validations.Interval.frequency(), keyword()) :: t()
   def add_rule(%ExCycle{} = cycle, frequency, opts \\ []) do
     Map.update!(cycle, :rules, &(&1 ++ [Rule.new(frequency, opts)]))
   end
