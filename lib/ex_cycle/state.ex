@@ -10,10 +10,11 @@ defmodule ExCycle.State do
           next: NaiveDateTime.t(),
           result: DateTime.t() | NaiveDateTime.t() | ExCycle.Span.t() | nil,
           exhausted?: boolean(),
-          iteration: non_neg_integer()
+          iteration: non_neg_integer(),
+          week_starting_on: :default | atom()
         }
 
-  defstruct [:origin, :next, :result, exhausted?: false, iteration: 0]
+  defstruct [:origin, :next, :result, exhausted?: false, iteration: 0, week_starting_on: :default]
 
   @type datetime :: Date.t() | DateTime.t() | NaiveDateTime.t()
 
@@ -83,8 +84,14 @@ defmodule ExCycle.State do
     Map.update!(datetime_state, :next, fun)
   end
 
+  @spec set_next(t(), NaiveDateTime.t()) :: t()
   def set_next(state, datetime) do
     %{state | next: to_naive(datetime)}
+  end
+
+  @spec set_week_starting_on(t(), :default | atom()) :: t()
+  def set_week_starting_on(state, week_starting_on) do
+    %{state | week_starting_on: week_starting_on}
   end
 
   def set_result(state) do
