@@ -53,6 +53,15 @@ defmodule ExCycle do
   @doc """
   Creates a stream of occurrences using the `from` as reference.
 
+  ## Options
+
+  - `week_starting_on`: This option defines which day is considered the first day of the week.
+    It is used in functions like day_of_week(date, week_starting_on) to adjust how intervals are
+    calculated for recurrence rules.
+    By default, the week starts on `:default` (which is monday according to
+    [Date.day_of_week/2](https://hexdocs.pm/elixir/Date.html#day_of_week/2), but you can customize
+    this to match your application's needs or user preferences.
+
   ## Examples
 
       iex> cycle =
@@ -74,11 +83,12 @@ defmodule ExCycle do
       ]
 
   """
-  @spec occurrences(t(), datetime()) :: Enumerable.t(NaiveDateTime.t() | ExCycle.Span.t())
-  def occurrences(%ExCycle{} = cycle, from) do
+  @spec occurrences(t(), datetime(), keyword()) ::
+          Enumerable.t(NaiveDateTime.t() | ExCycle.Span.t())
+  def occurrences(%ExCycle{} = cycle, from, opts \\ []) do
     cycle
     |> Map.update!(:rules, fn rules ->
-      Enum.map(rules, &Rule.init(&1, from))
+      Enum.map(rules, &Rule.init(&1, from, opts))
     end)
     |> Stream.unfold(&get_next_occurrence/1)
   end

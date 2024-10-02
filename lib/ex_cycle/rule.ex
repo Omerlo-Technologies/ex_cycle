@@ -113,8 +113,10 @@ defmodule ExCycle.Rule do
       %ExCycle{}
 
   """
-  @spec init(t(), ExCycle.datetime()) :: t()
-  def init(rule, from) do
+  @spec init(t(), ExCycle.datetime(), keyword()) :: t()
+  def init(rule, from, opts \\ []) do
+    week_starting_on = Keyword.get(opts, :week_starting_on, :default)
+
     rule
     |> Map.update!(:state, fn state ->
       state = state || ExCycle.State.new(from)
@@ -124,6 +126,7 @@ defmodule ExCycle.Rule do
       else
         state
       end
+      |> ExCycle.State.set_week_starting_on(week_starting_on)
       |> do_next(rule.validations)
     end)
     |> generate_result()

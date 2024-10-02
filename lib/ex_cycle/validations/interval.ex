@@ -55,8 +55,8 @@ defmodule ExCycle.Validations.Interval do
   end
 
   def valid?(state, %{frequency: :weekly, value: value}) do
-    origin_week = Date.beginning_of_week(state.origin)
-    next_week = Date.beginning_of_week(state.next)
+    origin_week = Date.beginning_of_week(state.origin, state.week_starting_on)
+    next_week = Date.beginning_of_week(state.next, state.week_starting_on)
     diff = Date.diff(next_week, origin_week)
     rem(diff, value * 7) == 0
   end
@@ -102,9 +102,11 @@ defmodule ExCycle.Validations.Interval do
   def next(state, %Interval{frequency: :weekly, value: value}) do
     {origin_week, next_week} =
       if is_nil(state.result) do
-        {Date.beginning_of_week(state.origin), Date.beginning_of_week(state.next)}
+        {Date.beginning_of_week(state.origin),
+         Date.beginning_of_week(state.next, state.week_starting_on)}
       else
-        {Date.beginning_of_week(state.next), Date.beginning_of_week(state.result)}
+        {Date.beginning_of_week(state.next),
+         Date.beginning_of_week(state.result, state.week_starting_on)}
       end
 
     if origin_week == next_week && not is_nil(state.result) do
