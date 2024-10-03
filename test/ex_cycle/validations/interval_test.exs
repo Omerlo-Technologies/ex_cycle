@@ -222,13 +222,13 @@ defmodule ExCycle.Validations.IntervalTest do
       assert Date.diff(state.next, state.origin) == 14
     end
 
-    @tag origin: ~D[2024-09-01]
-    @tag next: ~D[2024-09-02]
-    @tag interval_value: 2
+    @tag origin: ~D[2024-10-03]
+    @tag next: ~D[2024-10-07]
+    @tag interval_value: 3
     @tag set_result?: false
     test "weekly without result", %{state: state, interval: interval} do
       state = Interval.next(state, interval)
-      assert state.next == ~N[2024-09-09 00:00:00]
+      assert state.next == ~N[2024-10-21 00:00:00]
     end
   end
 

@@ -100,21 +100,10 @@ defmodule ExCycle.Validations.Interval do
   end
 
   def next(state, %Interval{frequency: :weekly, value: value}) do
-    {origin_week, next_week} =
-      if is_nil(state.result) do
-        {Date.beginning_of_week(state.origin),
-         Date.beginning_of_week(state.next, state.week_starting_on)}
-      else
-        {Date.beginning_of_week(state.next),
-         Date.beginning_of_week(state.result, state.week_starting_on)}
-      end
-
-    if origin_week == next_week && not is_nil(state.result) do
-      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, value * 7, :day))
-    else
-      diff = rem(Date.diff(next_week, origin_week), value * 7)
-      ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :day))
-    end
+    origin_week = Date.beginning_of_week(state.origin, state.week_starting_on)
+    next_week = Date.beginning_of_week(state.next, state.week_starting_on)
+    diff = rem(Date.diff(next_week, origin_week), value * 7)
+    ExCycle.State.update_next(state, &NaiveDateTime.add(&1, value * 7 - diff, :day))
   end
 
   def next(state, %Interval{frequency: :monthly, value: value}) do
