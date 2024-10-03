@@ -54,6 +54,27 @@ defmodule ExCycleTest do
 
       assert datetimes == [~N[2024-01-02 00:00:00], ~N[2024-01-03 00:00:00]]
     end
+
+    test "weekly with interval of 3" do
+      occurrences =
+        ExCycle.new()
+        |> ExCycle.add_rule(:weekly,
+          interval: 3,
+          days: [:monday],
+          starts_at: ~D[2024-10-03],
+          timezone: "America/New_York",
+          hours: [9],
+          minutes: [0]
+        )
+        |> ExCycle.occurrences(~D[2024-10-03])
+        |> Enum.take(3)
+
+      assert occurrences == [
+               DateTime.new!(~D[2024-10-21], ~T[09:00:00], "America/New_York"),
+               DateTime.new!(~D[2024-11-11], ~T[09:00:00], "America/New_York"),
+               DateTime.new!(~D[2024-12-02], ~T[09:00:00], "America/New_York")
+             ]
+    end
   end
 
   describe "excluded dates" do
