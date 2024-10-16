@@ -119,13 +119,8 @@ defmodule ExCycle.Rule do
 
     rule
     |> Map.update!(:state, fn state ->
-      state = state || ExCycle.State.new(from)
-
-      if Date.compare(state.next, from) == :lt do
-        ExCycle.State.set_next(state, from)
-      else
-        state
-      end
+      (state || ExCycle.State.new(from))
+      |> ExCycle.State.init(from)
       |> ExCycle.State.set_week_starting_on(week_starting_on)
       |> do_next(rule.validations)
     end)

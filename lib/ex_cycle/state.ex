@@ -33,31 +33,43 @@ defmodule ExCycle.State do
   """
   @spec new(datetime()) :: t()
   def new(origin \\ NaiveDateTime.utc_now()) do
-    new(origin, origin)
+    %State{
+      origin: to_naive(origin),
+      next: to_naive(origin),
+      result: nil
+    }
   end
 
   @doc """
-  Creates a new state specifying the `origin` and the `next` (aka `from` is this context).
+
+  Initializes the state.
+
+  This function is important when we need the state to jump to the future, compared to the origin date.
+
+  > This occurred when we used `occurences` with a date different of the current datetime or the
+  > origin datetime specified (aka `starts_at` in rule).
 
   ## Examples
 
-      iex> new(~D[2024-01-01], ~D[2024-02-02])
-      %ExCycle.State{origin: ~N[2024-01-01 00:00:00], next: ~N[2024-02-02 00:00:00]}
+      iex> ExCycle.State.init(%ExCycle.State{next: ~N[2024-01-01 10:00:00]}, ~D[2024-01-02])
+      %ExCycle.State{next: ~N[2024-01-02 00:00:00]}
 
-      iex> new(~N[2024-01-01 10:00:00], ~D[2024-02-02])
-      %ExCycle.State{origin: ~N[2024-01-01 10:00:00], next: ~N[2024-02-02 00:00:00]}
+      iex> ExCycle.State.init(%ExCycle.State{next: ~N[2024-01-01 10:00:00]}, ~D[2024-01-01])
+      %ExCycle.State{next: ~N[2024-01-01 10:00:00]}
 
-      iex> new(~N[2024-01-01 10:00:00], ~N[2024-02-02 10:00:00])
-      %ExCycle.State{origin: ~N[2024-01-01 10:00:00], next: ~N[2024-02-02 10:00:00]}
+      iex> ExCycle.State.init(%ExCycle.State{next: ~N[2024-01-01 10:00:00]}, ~N[2024-01-01 10:01:01])
+      %ExCycle.State{next: ~N[2024-01-02 10:01:01]}
 
   """
-  @spec new(datetime(), datetime()) :: t()
-  def new(origin, from) do
-    %State{
-      origin: to_naive(origin),
-      next: to_naive(from),
-      result: nil
-    }
+  @spec init(t(), datetime()) :: t()
+  def init(state, from) do
+    next = to_naive(from)
+
+    if NaiveDateTime.compare(state.next, next) == :lt do
+      set_next(state, next)
+    else
+      state
+    end
   end
 
   @doc """

@@ -7,7 +7,7 @@ defmodule ExCycle.Validations.IntervalTest do
   @moduletag next: ~N[2024-04-04 00:00:00]
   @moduletag set_result?: true
   setup %{origin: origin, next: next, set_result?: set_result?} do
-    state = ExCycle.State.new(origin, next)
+    state = ExCycle.State.new(origin) |> ExCycle.State.init(next)
 
     if set_result? do
       {:ok, state} = ExCycle.State.set_result(state)
