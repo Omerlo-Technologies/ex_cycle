@@ -127,7 +127,7 @@ defmodule ExCycle.Validations do
     end
   end
 
-  @exceptions [:days]
+  @exceptions [:days, :days_of_month]
   defp add_lock(locks, :day, validations) do
     if Enum.any?(validations, &(&1 in @exceptions)) do
       locks
@@ -136,7 +136,7 @@ defmodule ExCycle.Validations do
     end
   end
 
-  @exceptions [:days]
+  @exceptions [:days, :days_of_month]
   defp add_lock(locks, :week_day, validations) do
     if Enum.any?(validations, &(&1 in @exceptions)) do
       locks
