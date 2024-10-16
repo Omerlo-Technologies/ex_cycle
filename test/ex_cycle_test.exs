@@ -295,6 +295,16 @@ defmodule ExCycleTest do
 
       assert datetimes == [~N[2024-01-03 10:00:00], ~N[2024-01-05 10:00:00]]
     end
+
+    test "next is override with the occurrences" do
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, interval: 2, hours: [10], starts_at: ~D[2024-01-01])
+        |> ExCycle.occurrences(~N[2024-01-01 10:01:01])
+        |> Enum.take(2)
+
+      assert datetimes == [~N[2024-01-03 10:00:00], ~N[2024-01-05 10:00:00]]
+    end
   end
 
   describe "with DaysOfMonth" do
