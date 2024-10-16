@@ -53,7 +53,7 @@ defmodule ExCycle.Validations do
   @spec build(Interval.frequency(), keyword()) :: [any_validation(), ...]
   def build(frequency, opts) do
     validations = Enum.reduce(opts, %{}, &build_validation/2)
-    locks = locks_for(frequency, Map.keys(validations))
+    locks = locks_for(frequency, Map.keys(validations)) |> Enum.reverse()
     sort(validations) ++ locks
   end
 
@@ -61,8 +61,9 @@ defmodule ExCycle.Validations do
     add_lock(:second, validations)
     |> add_lock(:minute, validations)
     |> add_lock(:hour, validations)
-    |> add_lock(:day, validations)
+    # Month MUST be before day because month doesn't have same max day (30, 31 ...)
     |> add_lock(:month, validations)
+    |> add_lock(:day, validations)
   end
 
   defp locks_for(:monthly, validations) do

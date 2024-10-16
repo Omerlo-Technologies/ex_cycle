@@ -340,4 +340,16 @@ defmodule ExCycleTest do
              ]
     end
   end
+
+  describe "locks" do
+    test "locks order for first datetime" do
+      datetime =
+        ExCycle.new()
+        |> ExCycle.add_rule(:daily, timezone: "Etc/UTC", starts_at: ~N[2024-01-01 10:00:00])
+        |> ExCycle.occurrences(~N[2024-10-16 10:01:01])
+        |> Enum.at(0)
+
+      assert datetime == ~U[2024-10-17 10:00:00Z]
+    end
+  end
 end
