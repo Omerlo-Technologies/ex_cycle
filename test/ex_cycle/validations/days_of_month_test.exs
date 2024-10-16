@@ -56,5 +56,21 @@ defmodule ExCycle.Validations.DaysOfMonthTest do
       assert new_state.next.day == 31
       assert new_state.next.month == 3
     end
+
+    @tag datetime: ~N[2024-12-04 10:00:00]
+    test "last day of month", %{state: state} do
+      validation = DaysOfMonth.new([-1])
+      new_state = DaysOfMonth.next(state, validation)
+      assert new_state.next.day == 31
+      assert new_state.next.month == 12
+    end
+
+    @tag datetime: ~N[2024-01-31 10:00:00]
+    test "last day in next month (february)", %{state: state} do
+      validation = DaysOfMonth.new([-1])
+      new_state = DaysOfMonth.next(state, validation)
+      assert new_state.next.day == 29
+      assert new_state.next.month == 2
+    end
   end
 end

@@ -8,6 +8,10 @@ defmodule ExCycle.Validations.DaysOfMonth do
 
   will generate datetime every 1st and 10th of the month.
 
+      iex> %DaysOfMonth{days: [-1, 10]}
+
+  will generate datetime every last of month and 10th of the month.
+
   """
 
   @behaviour ExCycle.Validations
@@ -21,39 +25,59 @@ defmodule ExCycle.Validations.DaysOfMonth do
 
   @spec new([non_neg_integer(), ...]) :: t()
   def new(days_of_month) do
-    if Enum.any?(days_of_month, &(&1 > 31 || &1 < 1)) do
-      raise "Days of month must be less or equal to 31 and more or equal to 1"
+    if !Enum.any?(days_of_month, &valid_day_of_month?/1) do
+      raise "Days of month must be contained in [-31;-1] or [1;31]"
     end
 
     %DaysOfMonth{days: Enum.sort(days_of_month)}
   end
 
+  defp valid_day_of_month?(value) when value > 0 and value <= 31, do: true
+  defp valid_day_of_month?(value) when value < 0 and value >= -31, do: true
+  defp valid_day_of_month?(_value), do: false
+
   @impl ExCycle.Validations
   @spec valid?(ExCycle.State.t(), t()) :: boolean()
   def valid?(state, %DaysOfMonth{days: days}) do
-    state.next.day in days
+    last_day_of_month = Date.end_of_month(state.next)
+
+    Enum.any?(days, fn
+      day when day > 0 -> state.next.day == day
+      day when day < 0 -> state.next.day == last_day_of_month.day + day + 1
+    end)
   end
 
   @impl ExCycle.Validations
   @spec next(ExCycle.State.t(), t()) :: ExCycle.State.t()
   def next(state, %DaysOfMonth{days: days}) do
-    next_day = Enum.find(days, &(&1 > state.next.day)) || hd(days)
+    ExCycle.State.update_next(state, fn next ->
+      days
+      |> get_next_day(next)
+      |> NaiveDateTime.new!(~T[00:00:00])
+    end)
+  end
 
-    if next_day > Date.days_in_month(state.next) || next_day <= state.next.day do
-      shift_years = state.next.year + div(state.next.month, 12)
-      shift_months = rem(state.next.month, 12) + 1
+  defp get_next_day(days, current_day, condition \\ &>/2) do
+    last_day_of_month = current_day |> Date.end_of_month() |> Map.get(:day)
 
-      ExCycle.State.update_next(state, fn next ->
-        %{next | year: shift_years, month: shift_months, day: next_day}
-        |> NaiveDateTime.to_date()
-        |> NaiveDateTime.new!(~T[00:00:00])
+    date =
+      days
+      |> Enum.map(fn
+        day when day < 0 -> last_day_of_month + day + 1
+        day -> day
       end)
+      |> Enum.filter(&Calendar.ISO.valid_date?(current_day.year, current_day.month, &1))
+      |> Enum.map(&Date.new!(current_day.year, current_day.month, &1))
+      |> Enum.sort()
+      |> Enum.find(&condition.(Date.diff(&1, current_day), 0))
+
+    if date do
+      date
     else
-      ExCycle.State.update_next(state, fn next ->
-        NaiveDateTime.to_date(next)
-        |> Map.put(:day, next_day)
-        |> NaiveDateTime.new!(~T[00:00:00])
-      end)
+      current_day
+      |> Date.end_of_month()
+      |> Date.add(1)
+      |> then(fn date -> get_next_day(days, date, &>=/2) end)
     end
   end
 end
