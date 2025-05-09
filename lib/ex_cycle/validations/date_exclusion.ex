@@ -11,6 +11,7 @@ defmodule ExCycle.Validations.DateExclusion do
   """
 
   @behaviour ExCycle.Validations
+  @behaviour ExCycle.StringBuilder
 
   alias __MODULE__
 
@@ -54,5 +55,10 @@ defmodule ExCycle.Validations.DateExclusion do
       %Date{} -> Date.compare(next_datetime, datetime) == :eq
       %NaiveDateTime{} -> NaiveDateTime.compare(next_datetime, datetime) == :eq
     end
+  end
+
+  @impl ExCycle.StringBuilder
+  def string_params(%DateExclusion{} = date_exclusion) do
+    {:exclusions, Enum.map(date_exclusion.dates, &{&1, []})}
   end
 end

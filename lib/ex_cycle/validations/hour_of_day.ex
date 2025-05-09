@@ -11,6 +11,7 @@ defmodule ExCycle.Validations.HourOfDay do
   """
 
   @behaviour ExCycle.Validations
+  @behaviour ExCycle.StringBuilder
 
   alias __MODULE__
 
@@ -47,5 +48,10 @@ defmodule ExCycle.Validations.HourOfDay do
       diff = rem(next_hour - state.next.hour + 24, 24)
       ExCycle.State.update_next(state, &NaiveDateTime.add(&1, diff, :hour))
     end
+  end
+
+  @impl ExCycle.StringBuilder
+  def string_params(%HourOfDay{} = hour_of_day) do
+    {:hours, Enum.map(hour_of_day.hours, &{&1, []})}
   end
 end

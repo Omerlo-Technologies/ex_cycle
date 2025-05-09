@@ -15,13 +15,14 @@ defmodule ExCycle.Validations.DaysOfMonth do
   """
 
   @behaviour ExCycle.Validations
+  @behaviour ExCycle.StringBuilder
 
   alias __MODULE__
 
   @enforce_keys [:days]
   defstruct [:days]
 
-  @type t :: %DaysOfMonth{days: [non_neg_integer(), ...]}
+  @type t :: %DaysOfMonth{days: [integer(), ...]}
 
   @spec new([non_neg_integer(), ...]) :: t()
   def new(days_of_month) do
@@ -80,4 +81,18 @@ defmodule ExCycle.Validations.DaysOfMonth do
       |> then(fn date -> get_next_day(days, date, &>=/2) end)
     end
   end
+
+  @impl ExCycle.StringBuilder
+  def string_params(%DaysOfMonth{} = days_of_month) do
+    days = Enum.map(days_of_month.days, &day_of_month_to_string_params/1)
+    {:days_of_month, days}
+  end
+
+  defp day_of_month_to_string_params(1), do: {"1st", []}
+  defp day_of_month_to_string_params(2), do: {"2nd", []}
+  defp day_of_month_to_string_params(n) when n > 0, do: {"%{n}th", [n: n]}
+
+  defp day_of_month_to_string_params(-1), do: {"last", []}
+  defp day_of_month_to_string_params(-2), do: {"2nd to last", []}
+  defp day_of_month_to_string_params(n) when n < 0, do: {"%{n}th to last", [n: -n]}
 end

@@ -119,6 +119,34 @@ ExCycle.new()
 # Generates every day from 10:00 to 12:00 with timezone America/Montreal
 ```
 
+### Stringify an `ExCycle.Rule`
+
+> Warning: This function is "new" and there is high probability to have breaking changes on next release.
+
+```elixir
+stringify = fn(field, msg_opts) ->
+  msg =
+    Enum.map_join(msg_opts, ", ", fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+
+  case field do
+    :interval -> msg
+    :times -> " at " <> msg
+    :minutes -> " every hours at minutes " <> msg
+    :days_of_month -> ", on the " <> msg
+    :days -> " on " <> msg
+  end
+end
+
+ExCycle.Rule.new(:weekly, days: [:monday], hours: [10], minutes: [30])
+|> StringBuilder.traverse_validations(stringify)
+
+# "daily at 10:00, 10:30"
+```
+
 ## Credits
 
 `ExCycle` is inspired by [Cocktail](https://github.com/peek-travel/cocktail). ExCycle's goal is to improve the handling of Timezones and DST.
