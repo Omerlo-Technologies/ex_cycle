@@ -16,6 +16,7 @@ defmodule ExCycle.Validations.Days do
   """
 
   @behaviour ExCycle.Validations
+  @behaviour ExCycle.StringBuilder
 
   alias __MODULE__
 
@@ -174,4 +175,23 @@ defmodule ExCycle.Validations.Days do
 
   @day %{monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7}
   defp day_number(day), do: Map.fetch!(@day, day)
+
+  @impl ExCycle.StringBuilder
+  def string_params(%Days{} = days) do
+    days_params = Enum.map(days.days, &{to_string(&1), []})
+    days_by_week_params = Enum.map(days.days_by_week, &day_by_week_string_params/1)
+
+    {:days, :lists.append(days_params, days_by_week_params)}
+  end
+
+  defp day_by_week_string_params({1, day}), do: {"first %{day}", day: day}
+  defp day_by_week_string_params({2, day}), do: {"second %{day}", day: day}
+  defp day_by_week_string_params({3, day}), do: {"third %{day}", day: day}
+  defp day_by_week_string_params({4, day}), do: {"fourth %{day}", day: day}
+  defp day_by_week_string_params({5, day}), do: {"fifth %{day}", day: day}
+  defp day_by_week_string_params({-1, day}), do: {"last %{day}", day: day}
+  defp day_by_week_string_params({-2, day}), do: {"second to last %{day}", day: day}
+  defp day_by_week_string_params({-3, day}), do: {"third to last %{day}", day: day}
+  defp day_by_week_string_params({-4, day}), do: {"fourth to last %{day}", day: day}
+  defp day_by_week_string_params({-5, day}), do: {"fifth to last %{day}", day: day}
 end

@@ -13,6 +13,7 @@ defmodule ExCycle.Validations.Interval do
   """
 
   @behaviour ExCycle.Validations
+  @behaviour ExCycle.StringBuilder
 
   alias __MODULE__
 
@@ -124,4 +125,18 @@ defmodule ExCycle.Validations.Interval do
       %{next | year: state.origin.year + diff_years + value - rem_years}
     end)
   end
+
+  @impl ExCycle.StringBuilder
+  def string_params(%Interval{} = interval) do
+    {:interval, [frequency_to_string(interval.value, interval.frequency)]}
+  end
+
+  defp frequency_to_string(1, interval), do: {to_string(interval), []}
+  defp frequency_to_string(n, :secondly), do: {"every %{n} seconds", [n: n]}
+  defp frequency_to_string(n, :minutely), do: {"every %{n} minutes", [n: n]}
+  defp frequency_to_string(n, :hourly), do: {"every %{n} hours", [n: n]}
+  defp frequency_to_string(n, :daily), do: {"every %{n} days", [n: n]}
+  defp frequency_to_string(n, :weekly), do: {"every %{n} weeks", [n: n]}
+  defp frequency_to_string(n, :monthly), do: {"every %{n} months", [n: n]}
+  defp frequency_to_string(n, :yearly), do: {"every %{n} years", [n: n]}
 end
