@@ -323,6 +323,27 @@ defmodule ExCycleTest do
                ~N[2024-03-01 10:00:00]
              ]
     end
+
+    test "every 2 months" do
+      opts = [
+        interval: 2,
+        start_at_date: ~N[2025-05-19 06:15:00],
+        days: [{4, :monday}],
+        count: 3
+      ]
+
+      datetimes =
+        ExCycle.new()
+        |> ExCycle.add_rule(:monthly, opts)
+        |> ExCycle.occurrences(~D[2025-05-19])
+        |> Enum.take(3)
+
+      assert datetimes == [
+               ~N[2025-05-26 00:00:00],
+               ~N[2025-07-28 00:00:00],
+               ~N[2025-09-22 00:00:00]
+             ]
+    end
   end
 
   describe "days" do

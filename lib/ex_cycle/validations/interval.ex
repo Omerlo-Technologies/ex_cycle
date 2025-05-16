@@ -108,6 +108,9 @@ defmodule ExCycle.Validations.Interval do
   end
 
   def next(state, %Interval{frequency: :monthly, value: value}) do
+    diff = state.origin.month - (state.next.month + 12)
+    value = value + rem(diff, value)
+
     months = value + state.next.month - 1
     shift_years = state.next.year + div(months, 12)
     shift_months = rem(months, 12) + 1
