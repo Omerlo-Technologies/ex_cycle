@@ -134,15 +134,16 @@ stringify = fn(field, msg_opts) ->
 
   case field do
     :interval -> msg
-    :times -> " at " <> msg
-    :minutes -> " every hours at minutes " <> msg
-    :days_of_month -> ", on the " <> msg
-    :days -> " on " <> msg
+    :times -> "at " <> msg
+    :minutes -> "every hours at minutes " <> msg
+    :days_of_month -> "on the " <> msg
+    :days -> "on " <> msg
   end
 end
 
 ExCycle.Rule.new(:weekly, days: [:monday], hours: [10], minutes: [30])
-|> StringBuilder.traverse_validations(stringify)
+|> ExCycle.StringBuilder.traverse_validations(stringify)
+|> Enum.join(" ")
 
 # "daily at 10:00, 10:30"
 ```

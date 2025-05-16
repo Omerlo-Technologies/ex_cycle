@@ -6,6 +6,7 @@ defmodule ExCycle.StringBuilder do
 
       iex> ExCycle.Rule.new(:weekly, days: [:monday], hours: [10], minutes: [30])
       ...> StringBuilder.traverse_validations(&stringify/2)
+      ...> Enum.join(" ")
       "daily at 10:00, 10:30"
 
   > NOTE: You **MUST** implement the stringify function on your side.
@@ -35,7 +36,7 @@ defmodule ExCycle.StringBuilder do
     |> put_days(params)
     |> put_days_of_month(params)
     |> put_interval(params)
-    |> Enum.map_join(fn {unit, msg_opts} -> msg_fun.(unit, msg_opts) end)
+    |> Enum.map(fn {unit, msg_opts} -> msg_fun.(unit, msg_opts) end)
   end
 
   defp put_interval(acc, params) do
